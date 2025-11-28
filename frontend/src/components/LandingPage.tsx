@@ -19,6 +19,9 @@ interface LandingPageProps {
     onNavigate?: (page: 'landing' | 'features' | 'pricing' | 'how-it-works' | 'changelog' | 'docs' | 'about' | 'blog' | 'careers' | 'contact') => void;
 }
 
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 export default function LandingPage({ onNavigate }: LandingPageProps) {
     const { login: authLogin } = useAuth();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -138,7 +141,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
             formData.append('username', loginEmail);
             formData.append('password', loginPassword);
 
-            const response = await fetch('http://localhost:8000/auth/login', {
+            const response = await fetch(`${API_BASE_URL}/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -172,7 +175,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
         setError('');
 
         try {
-            const response = await fetch('http://localhost:8000/auth/signup', {
+            const response = await fetch(`${API_BASE_URL}/auth/signup`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
