@@ -23,13 +23,30 @@ We will use Render to host the FastAPI backend.
     *   Click **New +** -> **Web Service**.
     *   Connect your GitHub repository.
 
-2.  **Configure the Service**:
-    *   **Name**: `kodescruxx-backend` (or similar)
-    *   **Region**: Choose the one closest to you (e.g., Oregon, Frankfurt).
-    *   **Branch**: `main` (or your working branch).
-    *   **Root Directory**: `.` (leave empty or dot).
-    *   **Runtime**: `Python 3`.
-    *   **Build Command**: `pip install -r requirements.txt`
+2.  **Configure the Service** (Fill in the form exactly as below):
+    *   **Name**: `kodescruxx-backend`
+    *   **Region**: Oregon (US West) (or your preference)
+    *   **Branch**: `main`
+    *   **Root Directory**: (Leave blank)
+    *   **Runtime**: `Python 3`
+    *   **Build Command**: `pip install --upgrade pip && pip install -r requirements.txt`
+    *   **Start Command**: `gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT`
+        *   **IMPORTANT**: Do NOT use the default `gunicorn app:app`. You must copy the command above exactly.
+    *   **Instance Type**: Free
+
+3.  **Environment Variables**:
+    *   Scroll down to **Environment Variables** and click **Add Environment Variable** for each of these:
+
+    | Key | Value |
+    | :--- | :--- |
+    | `PYTHON_VERSION` | `3.9.0` |
+    | `SECRET_KEY` | (Enter a random string, e.g., `mysecretkey123`) |
+    | `OPENAI_API_KEY` | (Enter your OpenAI API Key) |
+    | `ALLOWED_ORIGINS` | `*` (Change this to your Vercel URL later) |
+    | `DATABASE_URL` | `sqlite:///./kodescruxx.db` |
+
+4.  **Deploy**:
+    *   Click **Create Web Service**.
 8.  **Copy the Backend URL**: Once deployed, copy the URL (e.g., `https://kodescruxx-backend.onrender.com`).
 
 ## 2. Deploy Frontend to Vercel
