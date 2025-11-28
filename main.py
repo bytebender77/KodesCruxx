@@ -78,6 +78,13 @@ ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS_STR.split(",") i
 if os.getenv("DEBUG", "False").lower() == "true":
     logger.info(f"Allowed CORS origins: {ALLOWED_ORIGINS}")
 
+# Debug: Check which SECRET_KEY is being loaded
+logger.info(f"Loaded SECRET_KEY starts with: {settings.SECRET_KEY[:5]}...")
+if settings.SECRET_KEY == "your-secret-key-keep-it-secret":
+    logger.warning("⚠️ USING DEFAULT INSECURE SECRET KEY! Check environment variables.")
+else:
+    logger.info("✅ Using custom SECRET_KEY from environment.")
+
 from starlette.middleware.sessions import SessionMiddleware
 from app.core.config import settings
 
