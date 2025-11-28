@@ -41,7 +41,7 @@ git push origin main
    - `MODEL_NAME` = `gpt-4o-mini` (optional)
    - `TEMPERATURE` = `0.7` (optional)
    - `MAX_TOKENS` = `1000` (optional)
-   - `ALLOWED_ORIGINS` = Your Vercel frontend URL (e.g., `https://your-app.vercel.app`)
+   - `ALLOWED_ORIGINS` = `https://kodes-cruxx-ten.vercel.app`
    - `DEBUG` = `False`
    - `LOG_LEVEL` = `INFO`
 
@@ -116,13 +116,13 @@ vercel
 5. **Set Environment Variables:**
 ```bash
 vercel env add VITE_API_URL
-# Enter: https://your-backend.onrender.com
+# Enter: https://kodescruxx-qcaf.onrender.com
 
 vercel env add VITE_WS_URL
-# Enter: wss://your-backend.onrender.com
+# Enter: wss://kodescruxx-qcaf.onrender.com
 
 vercel env add VITE_ASSET_BASE_URL
-# Enter: https://your-backend.onrender.com
+# Enter: https://kodescruxx-qcaf.onrender.com
 ```
 
 #### Option B: Using Vercel Dashboard
@@ -138,9 +138,9 @@ vercel env add VITE_ASSET_BASE_URL
    - **Install Command**: `npm install`
 
 5. **Add Environment Variables:**
-   - `VITE_API_URL` = `https://your-backend.onrender.com`
-   - `VITE_WS_URL` = `wss://your-backend.onrender.com`
-   - `VITE_ASSET_BASE_URL` = `https://your-backend.onrender.com`
+   - `VITE_API_URL` = `https://kodescruxx-qcaf.onrender.com`
+   - `VITE_WS_URL` = `wss://kodescruxx-qcaf.onrender.com`
+   - `VITE_ASSET_BASE_URL` = `https://kodescruxx-qcaf.onrender.com`
 
 6. **Click "Deploy"**
 
@@ -165,7 +165,7 @@ After getting your Vercel URL, update the `ALLOWED_ORIGINS` in Render:
 1. Go to Render Dashboard → Your Service → Environment
 2. Update `ALLOWED_ORIGINS`:
    ```
-   https://your-frontend.vercel.app
+   https://kodes-cruxx-ten.vercel.app
    ```
 3. Save and redeploy
 

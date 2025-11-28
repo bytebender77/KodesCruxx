@@ -42,12 +42,12 @@ We will use Render to host the FastAPI backend.
     | `PYTHON_VERSION` | `3.9.0` |
     | `SECRET_KEY` | (Enter a random string, e.g., `mysecretkey123`) |
     | `OPENAI_API_KEY` | (Enter your OpenAI API Key) |
-    | `ALLOWED_ORIGINS` | `*` (Change this to your Vercel URL later) |
+    | `ALLOWED_ORIGINS` | `https://kodes-cruxx-ten.vercel.app` |
     | `DATABASE_URL` | `sqlite:///./kodescruxx.db` |
 
 4.  **Deploy**:
     *   Click **Create Web Service**.
-8.  **Copy the Backend URL**: Once deployed, copy the URL (e.g., `https://kodescruxx-backend.onrender.com`).
+8.  **Copy the Backend URL**: Once deployed, copy the URL (e.g., `https://kodescruxx-qcaf.onrender.com`).
 
 ## 2. Deploy Frontend to Vercel
 
@@ -58,7 +58,7 @@ We will use Render to host the FastAPI backend.
     *   **Framework Preset**: `Vite`
     *   **Root Directory**: `frontend` (Important! Click "Edit" and select the `frontend` folder).
 5.  **Environment Variables**:
-    *   `VITE_API_URL`: Paste your Render Backend URL (e.g., `https://kodescruxx-backend.onrender.com`). **Do not add a trailing slash**.
+    *   `VITE_API_URL`: Paste your Render Backend URL (e.g., `https://kodescruxx-qcaf.onrender.com`). **Do not add a trailing slash**.
 6.  Click **Deploy**.
 7.  **Copy the Frontend URL**: Once deployed, copy the URL (e.g., `https://kodescruxx.vercel.app`).
 
@@ -66,12 +66,12 @@ We will use Render to host the FastAPI backend.
 
 1.  **Update Backend CORS**:
     *   Go back to Render > Environment.
-    *   Update `ALLOWED_ORIGINS` to your Vercel Frontend URL (e.g., `https://kodescruxx.vercel.app`).
+    *   Update `ALLOWED_ORIGINS` to your Vercel Frontend URL (e.g., `https://kodes-cruxx-ten.vercel.app`).
     *   Save changes (Render will redeploy).
 
 2.  **Update OAuth Redirect URIs**:
-    *   **Google Cloud Console**: Add `https://kodescruxx-backend.onrender.com/auth/google/callback` to "Authorized redirect URIs".
-    *   **GitHub Developer Settings**: Update "Authorization callback URL" to `https://kodescruxx-backend.onrender.com/auth/github/callback`.
+    *   **Google Cloud Console**: Add `https://kodescruxx-qcaf.onrender.com/auth/google/callback` to "Authorized redirect URIs".
+    *   **GitHub Developer Settings**: Update "Authorization callback URL" to `https://kodescruxx-qcaf.onrender.com/auth/github/callback`.
 
 ## 4. Verify
 

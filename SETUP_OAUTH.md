@@ -3,8 +3,8 @@
 This guide explains how to set up Google and GitHub authentication for your deployed application.
 
 ## Prerequisites
-- **Backend URL**: Your Render backend URL (e.g., `https://kodescruxx-backend.onrender.com`).
-- **Frontend URL**: Your Vercel frontend URL (e.g., `https://kodescruxx.vercel.app`).
+- **Backend URL**: Your Render backend URL (e.g., `https://kodescruxx-qcaf.onrender.com`).
+- **Frontend URL**: Your Vercel frontend URL (e.g., `https://kodes-cruxx-ten.vercel.app`).
 
 ---
 
@@ -17,10 +17,10 @@ This guide explains how to set up Google and GitHub authentication for your depl
 5.  **Application Type**: Web application.
 6.  **Name**: `KodesCruxx` (or your app name).
 7.  **Authorized JavaScript origins**:
-    *   Add your Vercel Frontend URL: `https://kodescruxx.vercel.app` (no trailing slash).
-    *   Add your Render Backend URL: `https://kodescruxx-backend.onrender.com` (no trailing slash).
+    *   Add your Vercel Frontend URL: `https://kodes-cruxx-ten.vercel.app` (no trailing slash).
+    *   Add your Render Backend URL: `https://kodescruxx-qcaf.onrender.com` (no trailing slash).
 8.  **Authorized redirect URIs**:
-    *   Add the backend callback URL: `https://kodescruxx-backend.onrender.com/auth/google/callback`
+    *   Add the backend callback URL: `https://kodescruxx-qcaf.onrender.com/auth/google/callback`
 9.  Click **Create**.
 10. Copy the **Client ID** and **Client Secret**.
 
@@ -31,9 +31,9 @@ This guide explains how to set up Google and GitHub authentication for your depl
 1.  Go to [GitHub Developer Settings](https://github.com/settings/developers).
 2.  Click **New OAuth App**.
 3.  **Application Name**: `KodesCruxx`.
-4.  **Homepage URL**: Your Vercel Frontend URL (`https://kodescruxx.vercel.app`).
+4.  **Homepage URL**: Your Vercel Frontend URL (`https://kodes-cruxx-ten.vercel.app`).
 5.  **Authorization callback URL**:
-    *   Add the backend callback URL: `https://kodescruxx-backend.onrender.com/auth/github/callback`
+    *   Add the backend callback URL: `https://kodescruxx-qcaf.onrender.com/auth/github/callback`
 6.  Click **Register application**.
 7.  Copy the **Client ID**.
 8.  Generate a new **Client Secret** and copy it.
