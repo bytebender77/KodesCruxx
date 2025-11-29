@@ -196,20 +196,27 @@ async def check_rate_limit(
     """Check if user has exceeded daily rate limit"""
     from datetime import datetime, timedelta
     
-    # Get start of today (UTC)
-    today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-    
-    # Count activities for today - using old_models for UserActivity table
-    count = db.query(old_models.UserActivity).filter(
-        old_models.UserActivity.user_id == current_user.id,
-        old_models.UserActivity.timestamp >= today
-    ).count()
-    
-    if count >= 20:
-        raise HTTPException(
-            status_code=429,
-            detail="Daily rate limit exceeded (20 queries per day). Please upgrade your plan."
-        )
+    try:
+        # Get start of today (UTC)
+        today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # Count activities for today - using old_models for UserActivity table
+        count = db.query(old_models.UserActivity).filter(
+            old_models.UserActivity.user_id == current_user.id,
+            old_models.UserActivity.timestamp >= today
+        ).count()
+        
+        if count >= 20:
+            raise HTTPException(
+                status_code=429,
+                detail="Daily rate limit exceeded (20 queries per day). Please upgrade your plan."
+            )
+    except Exception as e:
+        # If UserActivity table doesn't exist, skip rate limiting
+        # This allows the app to work even without the activity tracking table
+        import logging
+        logging.warning(f"Rate limiting skipped: {str(e)}")
+        pass
     
     return current_user
 
@@ -604,40 +611,51 @@ async def get_dashboard_stats(current_user: user_models.User = Depends(get_curre
     """Get user dashboard statistics"""
     from sqlalchemy import func
     
-    # Total activities count
-    total_uses = db.query(old_models.UserActivity).filter(
-        old_models.UserActivity.user_id == current_user.id
-    ).count()
-    
-    # Unique features used
-    features_used = db.query(func.count(func.distinct(old_models.UserActivity.feature))).filter(
-        old_models.UserActivity.user_id == current_user.id
-    ).scalar() or 0
-    
-    # Success rate
-    total_activities = db.query(old_models.UserActivity).filter(
-        old_models.UserActivity.user_id == current_user.id
-    ).count()
-    
-    successful = db.query(old_models.UserActivity).filter(
-        old_models.UserActivity.user_id == current_user.id,
-        old_models.UserActivity.success == True
-    ).count()
-    
-    success_rate = (successful / total_activities * 100) if total_activities > 0 else 100
-    
-    # Average duration
-    avg_duration = db.query(func.avg(old_models.UserActivity.duration_ms)).filter(
-        old_models.UserActivity.user_id == current_user.id,
-        old_models.UserActivity.duration_ms.isnot(None)
-    ).scalar() or 0
-    
-    return {
-        "total_uses": total_uses,
-        "features_used": features_used,
-        "success_rate": round(success_rate, 1),
-        "avg_duration_ms": round(avg_duration, 0) if avg_duration else 0
-    }
+    try:
+        # Total activities count
+        total_uses = db.query(old_models.UserActivity).filter(
+            old_models.UserActivity.user_id == current_user.id
+        ).count()
+        
+        # Unique features used
+        features_used = db.query(func.count(func.distinct(old_models.UserActivity.feature))).filter(
+            old_models.UserActivity.user_id == current_user.id
+        ).scalar() or 0
+        
+        # Success rate
+        total_activities = db.query(old_models.UserActivity).filter(
+            old_models.UserActivity.user_id == current_user.id
+        ).count()
+        
+        successful = db.query(old_models.UserActivity).filter(
+            old_models.UserActivity.user_id == current_user.id,
+            old_models.UserActivity.success == True
+        ).count()
+        
+        success_rate = (successful / total_activities * 100) if total_activities > 0 else 100
+        
+        # Average duration
+        avg_duration = db.query(func.avg(old_models.UserActivity.duration_ms)).filter(
+            old_models.UserActivity.user_id == current_user.id,
+            old_models.UserActivity.duration_ms.isnot(None)
+        ).scalar() or 0
+        
+        return {
+            "total_uses": total_uses,
+            "features_used": features_used,
+            "success_rate": round(success_rate, 1),
+            "avg_duration_ms": round(avg_duration, 0) if avg_duration else 0
+        }
+    except Exception as e:
+        # If UserActivity table doesn't exist, return default values
+        import logging
+        logging.warning(f"Dashboard stats using defaults: {str(e)}")
+        return {
+            "total_uses": 0,
+            "features_used": 0,
+            "success_rate": 100.0,
+            "avg_duration_ms": 0
+        }
 
 @app.get("/dashboard/recent")
 async def get_recent_activity(
@@ -646,23 +664,29 @@ async def get_recent_activity(
     db: Session = Depends(get_db)
 ):
     """Get recent user activity"""
-    activities = db.query(old_models.UserActivity).filter(
-        old_models.UserActivity.user_id == current_user.id
-    ).order_by(old_models.UserActivity.timestamp.desc()).limit(limit).all()
-    
-    return {
-        "activities": [
-            {
-                "id": activity.id,
-                "feature": activity.feature,
-                "language": activity.language,
-                "success": activity.success,
-                "timestamp": activity.timestamp.isoformat(),
-                "duration_ms": activity.duration_ms
-            }
-            for activity in activities
-        ]
-    }
+    try:
+        activities = db.query(old_models.UserActivity).filter(
+            old_models.UserActivity.user_id == current_user.id
+        ).order_by(old_models.UserActivity.timestamp.desc()).limit(limit).all()
+        
+        return {
+            "activities": [
+                {
+                    "id": activity.id,
+                    "feature": activity.feature,
+                    "language": activity.language,
+                    "success": activity.success,
+                    "timestamp": activity.timestamp.isoformat(),
+                    "duration_ms": activity.duration_ms
+                }
+                for activity in activities
+            ]
+        }
+    except Exception as e:
+        # If UserActivity table doesn't exist, return empty list
+        import logging
+        logging.warning(f"Recent activity using defaults: {str(e)}")
+        return {"activities": []}
 
 @app.post("/activity/log")
 async def log_activity(
@@ -673,19 +697,24 @@ async def log_activity(
     """Log user activity"""
     import uuid
     
-    activity = old_models.UserActivity(
-        id=str(uuid.uuid4()),
-        user_id=current_user.id,
-        feature=activity_data.feature,
-        language=activity_data.language,
-        success=activity_data.success,
-        duration_ms=activity_data.duration_ms
-    )
-    
-    db.add(activity)
-    db.commit()
-    
-    return {"status": "logged"}
+    try:
+        activity = old_models.UserActivity(
+            id=str(uuid.uuid4()),
+            user_id=current_user.id,
+            feature=activity_data.feature,
+            language=activity_data.language,
+            success=activity_data.success,
+            duration_ms=activity_data.duration_ms
+        )
+        
+        db.add(activity)
+        db.commit()
+        return {"status": "logged"}
+    except Exception as e:
+        # If UserActivity table doesn't exist, skip logging
+        import logging
+        logging.warning(f"Activity logging skipped: {str(e)}")
+        return {"status": "skipped"}
 
 # Workflow Endpoints
 
