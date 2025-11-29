@@ -131,7 +131,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-enter delay-100">
 
                 {/* Total Uses */}
-                <div className="border-gradient rounded-[1.5rem] p-6 relative overflow-hidden group bg-white/[0.05] [--fx-filter:blur(10px)_liquid-glass(5,10)_saturate(1.25)_noise(0.5,1,0.05)] hover:bg-white/[0.08] transition-colors duration-300">
+                <div className="border-gradient rounded-[1.5rem] p-6 relative overflow-hidden group glass-liquid hover:bg-white/[0.08] transition-colors duration-300">
 
 
                     <div className="flex items-center justify-between mb-8 relative z-10">
@@ -151,7 +151,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Features Used */}
-                <div className="border-gradient rounded-[1.5rem] p-6 relative overflow-hidden group bg-white/[0.05] [--fx-filter:blur(10px)_liquid-glass(5,10)_saturate(1.25)_noise(0.5,1,0.05)] hover:bg-white/[0.08] transition-colors duration-300">
+                <div className="border-gradient rounded-[1.5rem] p-6 relative overflow-hidden group glass-liquid hover:bg-white/[0.08] transition-colors duration-300">
 
 
                     <div className="flex items-center justify-between mb-8 relative z-10">
@@ -171,7 +171,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Success Rate */}
-                <div className="border-gradient rounded-[1.5rem] p-6 relative overflow-hidden group bg-white/[0.05] [--fx-filter:blur(10px)_liquid-glass(5,10)_saturate(1.25)_noise(0.5,1,0.05)] hover:bg-white/[0.08] transition-colors duration-300">
+                <div className="border-gradient rounded-[1.5rem] p-6 relative overflow-hidden group glass-liquid hover:bg-white/[0.08] transition-colors duration-300">
 
 
                     <div className="flex items-center justify-between mb-8 relative z-10">
@@ -191,7 +191,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Avg Duration */}
-                <div className="border-gradient rounded-[1.5rem] p-6 relative overflow-hidden group bg-white/[0.05] [--fx-filter:blur(10px)_liquid-glass(5,10)_saturate(1.25)_noise(0.5,1,0.05)] hover:bg-white/[0.08] transition-colors duration-300">
+                <div className="border-gradient rounded-[1.5rem] p-6 relative overflow-hidden group glass-liquid hover:bg-white/[0.08] transition-colors duration-300">
 
 
                     <div className="flex items-center justify-between mb-8 relative z-10">
@@ -212,7 +212,7 @@ export default function Dashboard() {
             </div>
 
             {/* Recent Activity Section */}
-            <div className="rounded-[2rem] p-1 animate-enter delay-200 bg-white/5 backdrop-blur-md border border-white/10">
+            <div className="border-gradient rounded-[2rem] p-1 animate-enter delay-200 glass-liquid">
                 <div className="p-6 md:p-8">
                     <div className="flex items-center justify-between mb-8">
                         <h2 className="text-xl font-medium text-white tracking-tight">Recent Activity</h2>

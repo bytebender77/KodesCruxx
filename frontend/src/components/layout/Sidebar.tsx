@@ -100,7 +100,7 @@ export default function Sidebar({ features, activeFeature, setActiveFeature, onF
                 )}
 
                 {/* Navigation Links */}
-                <div className="glass-liquid border-gradient rounded-2xl p-2 space-y-1 flex-1 overflow-y-auto custom-scrollbar shadow-xl">
+                <div className="border-gradient rounded-2xl p-2 space-y-1 flex-1 overflow-y-auto custom-scrollbar shadow-xl glass-liquid">
                     {features.map((feature) => {
                         const isActive = activeFeature === feature.id;
                         const Icon = feature.icon;
