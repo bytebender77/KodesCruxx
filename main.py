@@ -200,9 +200,9 @@ async def check_rate_limit(
     today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
     
     # Count activities for today - using old_models for UserActivity table
-    count = db.query(old_old_models.UserActivity).filter(
-        old_old_models.UserActivity.user_id == current_user.id,
-        old_old_models.UserActivity.timestamp >= today
+    count = db.query(old_models.UserActivity).filter(
+        old_models.UserActivity.user_id == current_user.id,
+        old_models.UserActivity.timestamp >= today
     ).count()
     
     if count >= 20:
@@ -673,7 +673,7 @@ async def log_activity(
     """Log user activity"""
     import uuid
     
-    activity = old_old_models.UserActivity(
+    activity = old_models.UserActivity(
         id=str(uuid.uuid4()),
         user_id=current_user.id,
         feature=activity_data.feature,
@@ -745,7 +745,7 @@ async def run_workflow(
         raise HTTPException(status_code=404, detail="Workflow not found")
     
     execution_id = str(uuid.uuid4())
-    execution = old_old_models.WorkflowExecution(
+    execution = old_models.WorkflowExecution(
         id=execution_id,
         workflow_id=workflow.id,
         status="pending"
@@ -760,8 +760,8 @@ async def run_workflow(
 
 @app.get("/workflows/executions/{execution_id}")
 async def get_execution(execution_id: str, current_user: user_models.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    execution = db.query(old_old_models.WorkflowExecution).join(old_models.Workflow).filter(
-        old_old_models.WorkflowExecution.id == execution_id,
+    execution = db.query(old_models.WorkflowExecution).join(old_models.Workflow).filter(
+        old_models.WorkflowExecution.id == execution_id,
         old_models.Workflow.user_id == current_user.id
     ).first()
     
