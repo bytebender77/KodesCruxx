@@ -12,11 +12,18 @@ from pathlib import Path
 from datetime import timedelta
 from sqlalchemy.orm import Session
 
-import models
-from models import User
-from database import get_db
+# Old database system - keeping for backward compatibility with old tables
+import models as old_models
+from database import get_db as get_old_db
 
-from auth import get_current_user, create_access_token, verify_password, get_password_hash
+# New auth system
+from app.users import models as user_models
+from app.core.database import get_db
+
+# Use new auth system
+from app.auth.router import get_current_user
+from app.auth import service as auth_service
+from app.core import security
 
 from ai_engine import (
     explain_code,
@@ -49,9 +56,7 @@ from ai_engine import (
 from code_executor import executor, SUPPORTED_LANGUAGES
 from websocket_handler import connection_manager
 from room_manager import room_manager
-from database import get_db
-import models
-import auth
+# Removed duplicate imports - using new auth system above
 
 from app.core.database import engine as new_engine, Base as NewBase
 from app.auth.router import router as auth_router
@@ -171,51 +176,21 @@ class UserResponse(BaseModel):
     class Config:
         orm_mode = True
 
-# Auth Endpoints
-@app.post("/register", response_model=UserResponse)
-def register(user: UserCreate, db: Session = Depends(get_db)):
-    db_user = db.query(models.User).filter(models.User.username == user.username).first()
-    if db_user:
-        raise HTTPException(status_code=400, detail="Username already registered")
-    
-    if user.email:
-        db_email = db.query(models.User).filter(models.User.email == user.email).first()
-        if db_email:
-            raise HTTPException(status_code=400, detail="Email already registered")
-    
-    hashed_password = auth.get_password_hash(user.password)
-    new_user = models.User(
-        id=room_manager.generate_user_id(),
-        username=user.username,
-        email=user.email,
-        hashed_password=hashed_password
-    )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
+# Auth Endpoints - DEPRECATED
+# These endpoints are kept for backward compatibility but redirect to /auth/*
+# New applications should use /auth/signup and /auth/login instead
 
-@app.post("/token", response_model=Token)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.username == form_data.username).first()
-    if not user or not auth.verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = auth.create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
-    )
-    return {"access_token": access_token, "token_type": "bearer"}
-
-@app.get("/users/me", response_model=UserResponse)
-async def read_users_me(current_user: models.User = Depends(auth.get_current_user)):
-    return current_user
+@app.get("/users/me")
+async def read_users_me(current_user: user_models.User = Depends(get_current_user)):
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "first_name": current_user.first_name,
+        "last_name": current_user.last_name
+    }
 
 async def check_rate_limit(
-    current_user: models.User = Depends(auth.get_current_user),
+    current_user: user_models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Check if user has exceeded daily rate limit"""
@@ -224,10 +199,10 @@ async def check_rate_limit(
     # Get start of today (UTC)
     today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
     
-    # Count activities for today
-    count = db.query(models.UserActivity).filter(
-        models.UserActivity.user_id == current_user.id,
-        models.UserActivity.timestamp >= today
+    # Count activities for today - using old_models for UserActivity table
+    count = db.query(old_old_models.UserActivity).filter(
+        old_old_models.UserActivity.user_id == current_user.id,
+        old_old_models.UserActivity.timestamp >= today
     ).count()
     
     if count >= 20:
@@ -239,39 +214,39 @@ async def check_rate_limit(
     return current_user
 
 @app.post("/explain")
-def explain(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+def explain(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     return {"response": explain_code(req.language, req.topic or "", req.level, req.code or "")}
 
 @app.post("/debug")
-def debug(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+def debug(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     return {"response": debug_code(req.language, req.code, req.topic or "")}
 
 @app.post("/generate")
-def generate(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+def generate(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     return {"response": generate_code(req.language, req.topic, req.level)}
 
 @app.post("/convert_logic")
-def convert_logic(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+def convert_logic(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     return {"response": convert_logic_to_code(req.logic, req.language)}
 
 @app.post("/analyze_complexity")
-def analyze(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+def analyze(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     return {"response": analyze_complexity(req.code)}
 
 @app.post("/get_snippets")
-def get_snippets_endpoint(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+def get_snippets_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     return {"response": get_snippets(req.language, req.snippet or req.topic or "")}
 
 @app.post("/get_projects")
-def get_projects_endpoint(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+def get_projects_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     return {"response": get_projects(req.level, req.topic)}
 
 @app.post("/get_roadmaps")
-def get_roadmaps_endpoint(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+def get_roadmaps_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     return {"response": get_roadmaps(req.level, req.topic)}
 
 @app.post("/trace_code")
-def trace_code_endpoint(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+def trace_code_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     return {"response": trace_code(req.code or "", req.language or "python")}
 
 # ============================================
@@ -279,18 +254,18 @@ def trace_code_endpoint(req: RequestModel, user: models.User = Depends(check_rat
 # ============================================
 
 @app.post("/review_code")
-def review_code_endpoint(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+def review_code_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     """Comprehensive code review"""
     return {"response": review_code(req.code or "", req.language or "python")}
 
 @app.post("/generate_tests")
-def generate_tests_endpoint(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+def generate_tests_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     """Generate unit tests for code"""
     framework = getattr(req, 'framework', '')
     return {"response": generate_tests(req.code or "", req.language or "python", framework)}
 
 @app.post("/refactor_code")
-def refactor_code_endpoint(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+def refactor_code_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     """Refactor code with improvements"""
     refactor_type = getattr(req, 'refactor_type', 'general')
     return {"response": refactor_code(req.code or "", req.language or "python", refactor_type)}
@@ -298,7 +273,7 @@ def refactor_code_endpoint(req: RequestModel, user: models.User = Depends(check_
 
 # Streaming endpoints
 @app.post("/stream/explain")
-async def stream_explain_endpoint(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+async def stream_explain_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     """Stream explanation of code or topic"""
     async def generate():
         # Send immediate response to show request was received
@@ -309,7 +284,7 @@ async def stream_explain_endpoint(req: RequestModel, user: models.User = Depends
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 @app.post("/stream/debug")
-async def stream_debug_endpoint(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+async def stream_debug_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     """Stream debugging analysis"""
     async def generate():
         # Send immediate response to show request was received
@@ -320,7 +295,7 @@ async def stream_debug_endpoint(req: RequestModel, user: models.User = Depends(c
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 @app.post("/stream/generate")
-async def stream_generate_endpoint(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+async def stream_generate_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     """Stream code generation"""
     async def generate():
         # Send immediate response to show request was received
@@ -331,7 +306,7 @@ async def stream_generate_endpoint(req: RequestModel, user: models.User = Depend
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 @app.post("/stream/convert_logic")
-async def stream_convert_logic_endpoint(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+async def stream_convert_logic_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     """Stream logic to code conversion"""
     async def generate():
         # Send immediate response to show request was received
@@ -342,7 +317,7 @@ async def stream_convert_logic_endpoint(req: RequestModel, user: models.User = D
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 @app.post("/stream/analyze_complexity")
-async def stream_analyze_complexity_endpoint(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+async def stream_analyze_complexity_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     """Stream complexity analysis"""
     async def generate():
         # Send immediate response to show request was received
@@ -353,7 +328,7 @@ async def stream_analyze_complexity_endpoint(req: RequestModel, user: models.Use
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 @app.post("/stream/trace_code")
-async def stream_trace_code_endpoint(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+async def stream_trace_code_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     """Stream code tracing"""
     async def generate():
         # Send immediate response to show request was received
@@ -364,7 +339,7 @@ async def stream_trace_code_endpoint(req: RequestModel, user: models.User = Depe
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 @app.post("/stream/get_snippets")
-async def stream_get_snippets_endpoint(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+async def stream_get_snippets_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     """Stream code snippets"""
     async def generate():
         # Send immediate response to show request was received
@@ -375,7 +350,7 @@ async def stream_get_snippets_endpoint(req: RequestModel, user: models.User = De
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 @app.post("/stream/get_projects")
-async def stream_get_projects_endpoint(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+async def stream_get_projects_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     """Stream project ideas"""
     async def generate():
         # Send immediate response to show request was received
@@ -386,7 +361,7 @@ async def stream_get_projects_endpoint(req: RequestModel, user: models.User = De
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 @app.post("/stream/get_roadmaps")
-async def stream_get_roadmaps_endpoint(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+async def stream_get_roadmaps_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     """Stream learning roadmaps"""
     async def generate():
         # Send immediate response to show request was received
@@ -398,7 +373,7 @@ async def stream_get_roadmaps_endpoint(req: RequestModel, user: models.User = De
 
 
 @app.post("/stream/review_code")
-async def stream_review_code_endpoint(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+async def stream_review_code_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     """Stream code review analysis"""
     async def generate():
         yield f"data: {json.dumps({'chunk': ''})}\n\n"
@@ -408,7 +383,7 @@ async def stream_review_code_endpoint(req: RequestModel, user: models.User = Dep
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 @app.post("/stream/generate_tests")
-async def stream_generate_tests_endpoint(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+async def stream_generate_tests_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     """Stream test generation"""
     async def generate():
         yield f"data: {json.dumps({'chunk': ''})}\n\n"
@@ -419,7 +394,7 @@ async def stream_generate_tests_endpoint(req: RequestModel, user: models.User = 
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 @app.post("/stream/refactor_code")
-async def stream_refactor_code_endpoint(req: RequestModel, user: models.User = Depends(check_rate_limit)):
+async def stream_refactor_code_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
     """Stream code refactoring"""
     async def generate():
         yield f"data: {json.dumps({'chunk': ''})}\n\n"
@@ -625,36 +600,36 @@ async def shutdown_event():
 
 # Dashboard Endpoints
 @app.get("/dashboard/stats")
-async def get_dashboard_stats(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+async def get_dashboard_stats(current_user: user_models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Get user dashboard statistics"""
     from sqlalchemy import func
     
     # Total activities count
-    total_uses = db.query(models.UserActivity).filter(
-        models.UserActivity.user_id == current_user.id
+    total_uses = db.query(old_models.UserActivity).filter(
+        old_models.UserActivity.user_id == current_user.id
     ).count()
     
     # Unique features used
-    features_used = db.query(func.count(func.distinct(models.UserActivity.feature))).filter(
-        models.UserActivity.user_id == current_user.id
+    features_used = db.query(func.count(func.distinct(old_models.UserActivity.feature))).filter(
+        old_models.UserActivity.user_id == current_user.id
     ).scalar() or 0
     
     # Success rate
-    total_activities = db.query(models.UserActivity).filter(
-        models.UserActivity.user_id == current_user.id
+    total_activities = db.query(old_models.UserActivity).filter(
+        old_models.UserActivity.user_id == current_user.id
     ).count()
     
-    successful = db.query(models.UserActivity).filter(
-        models.UserActivity.user_id == current_user.id,
-        models.UserActivity.success == True
+    successful = db.query(old_models.UserActivity).filter(
+        old_models.UserActivity.user_id == current_user.id,
+        old_models.UserActivity.success == True
     ).count()
     
     success_rate = (successful / total_activities * 100) if total_activities > 0 else 100
     
     # Average duration
-    avg_duration = db.query(func.avg(models.UserActivity.duration_ms)).filter(
-        models.UserActivity.user_id == current_user.id,
-        models.UserActivity.duration_ms.isnot(None)
+    avg_duration = db.query(func.avg(old_models.UserActivity.duration_ms)).filter(
+        old_models.UserActivity.user_id == current_user.id,
+        old_models.UserActivity.duration_ms.isnot(None)
     ).scalar() or 0
     
     return {
@@ -667,13 +642,13 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user), db
 @app.get("/dashboard/recent")
 async def get_recent_activity(
     limit: int = 10,
-    current_user: User = Depends(get_current_user),
+    current_user: user_models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get recent user activity"""
-    activities = db.query(models.UserActivity).filter(
-        models.UserActivity.user_id == current_user.id
-    ).order_by(models.UserActivity.timestamp.desc()).limit(limit).all()
+    activities = db.query(old_models.UserActivity).filter(
+        old_models.UserActivity.user_id == current_user.id
+    ).order_by(old_models.UserActivity.timestamp.desc()).limit(limit).all()
     
     return {
         "activities": [
@@ -692,13 +667,13 @@ async def get_recent_activity(
 @app.post("/activity/log")
 async def log_activity(
     activity_data: LogActivityRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: user_models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Log user activity"""
     import uuid
     
-    activity = models.UserActivity(
+    activity = old_old_models.UserActivity(
         id=str(uuid.uuid4()),
         user_id=current_user.id,
         feature=activity_data.feature,
@@ -720,11 +695,11 @@ async def create_workflow(
     nodes: str,
     edges: str,
     description: str = None,
-    current_user: User = Depends(get_current_user),
+    current_user: user_models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     import uuid
-    workflow = models.Workflow(
+    workflow = old_models.Workflow(
         id=str(uuid.uuid4()),
         user_id=current_user.id,
         name=name,
@@ -738,14 +713,14 @@ async def create_workflow(
     return workflow
 
 @app.get("/workflows")
-async def get_workflows(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return db.query(models.Workflow).filter(models.Workflow.user_id == current_user.id).all()
+async def get_workflows(current_user: user_models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return db.query(old_models.Workflow).filter(old_models.Workflow.user_id == current_user.id).all()
 
 @app.get("/workflows/{workflow_id}")
-async def get_workflow(workflow_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    workflow = db.query(models.Workflow).filter(
-        models.Workflow.id == workflow_id,
-        models.Workflow.user_id == current_user.id
+async def get_workflow(workflow_id: str, current_user: user_models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    workflow = db.query(old_models.Workflow).filter(
+        old_models.Workflow.id == workflow_id,
+        old_models.Workflow.user_id == current_user.id
     ).first()
     if not workflow:
         raise HTTPException(status_code=404, detail="Workflow not found")
@@ -755,22 +730,22 @@ async def get_workflow(workflow_id: str, current_user: User = Depends(get_curren
 async def run_workflow(
     workflow_id: str,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user),
+    current_user: user_models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     import uuid
     from workflow_engine import WorkflowEngine
     
-    workflow = db.query(models.Workflow).filter(
-        models.Workflow.id == workflow_id,
-        models.Workflow.user_id == current_user.id
+    workflow = db.query(old_models.Workflow).filter(
+        old_models.Workflow.id == workflow_id,
+        old_models.Workflow.user_id == current_user.id
     ).first()
     
     if not workflow:
         raise HTTPException(status_code=404, detail="Workflow not found")
     
     execution_id = str(uuid.uuid4())
-    execution = models.WorkflowExecution(
+    execution = old_old_models.WorkflowExecution(
         id=execution_id,
         workflow_id=workflow.id,
         status="pending"
@@ -784,10 +759,10 @@ async def run_workflow(
     return {"execution_id": execution_id, "status": "pending"}
 
 @app.get("/workflows/executions/{execution_id}")
-async def get_execution(execution_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    execution = db.query(models.WorkflowExecution).join(models.Workflow).filter(
-        models.WorkflowExecution.id == execution_id,
-        models.Workflow.user_id == current_user.id
+async def get_execution(execution_id: str, current_user: user_models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    execution = db.query(old_old_models.WorkflowExecution).join(old_models.Workflow).filter(
+        old_old_models.WorkflowExecution.id == execution_id,
+        old_models.Workflow.user_id == current_user.id
     ).first()
     
     if not execution:
