@@ -143,6 +143,7 @@ export default function AboutPage({ onBack }: AboutPageProps) {
                             {[
                                 {
                                     name: "Palak Soni",
+<<<<<<< HEAD
                                     role: "Founder Product & Strategy, Backend & AI",
                                     linkedin: "https://www.linkedin.com/in/palak-soni-292280288/",
                                     image: "/images/team/palak.jpeg"
@@ -151,6 +152,21 @@ export default function AboutPage({ onBack }: AboutPageProps) {
                                 {
                                     name: "Sujal Kumar",
                                     role: "Design & Marketing, Full Stack Web Development",
+=======
+                                    role: "Founder Product & Strategy",
+                                    linkedin: "https://www.linkedin.com/in/palak-soni-292280288/",
+                                    image: "/images/team/palak.jpeg"
+                                },
+                                {
+                                    name: "Kunal Kumar Gupta",
+                                    role: "AI & Backend Engineering",
+                                    linkedin: "https://www.linkedin.com/in/kunal-kumar-gupta-41bab327a/",
+                                    image: "/images/team/kunal.jpeg?v=2"
+                                },
+                                {
+                                    name: "Sujal Kumar",
+                                    role: "Design & Marketing",
+>>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
                                     linkedin: "https://www.linkedin.com/in/sujal-kumar-585135289/",
                                     image: "/images/team/sujal.jpeg"
                                 }

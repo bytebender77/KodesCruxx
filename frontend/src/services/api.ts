@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Central API base URL used across the frontend.
 // Priority:
 // 1) Explicit Vercel/Env config via VITE_API_URL (no trailing slash)
@@ -6,6 +7,9 @@
 export const API_BASE_URL =
   (import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL.replace(/\/$/, '')) ||
   (import.meta.env.PROD ? 'https://kodescruxx-backend-gnlc.onrender.com' : 'http://localhost:8000');
+=======
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+>>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
 
 export interface ApiRequest {
   language?: string;
@@ -22,6 +26,7 @@ export interface ApiResponse {
   response: string;
 }
 
+<<<<<<< HEAD
 export interface QuotaStatus {
   success: boolean;
   quota_used: number;
@@ -31,6 +36,8 @@ export interface QuotaStatus {
   is_exhausted: boolean;
 }
 
+=======
+>>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
 export interface ExecuteCodeResponse {
   success: boolean;
   output: string;
@@ -41,6 +48,7 @@ export interface ExecuteCodeResponse {
   version?: string;
 }
 
+<<<<<<< HEAD
 // Custom error for quota exhaustion
 export class QuotaExhaustedError extends Error {
   public quotaInfo: any;
@@ -52,6 +60,8 @@ export class QuotaExhaustedError extends Error {
   }
 }
 
+=======
+>>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
 class ApiService {
   private async request<T>(endpoint: string, data: ApiRequest): Promise<T> {
     const token = localStorage.getItem('token');
@@ -69,12 +79,15 @@ class ApiService {
         body: JSON.stringify(data),
       });
 
+<<<<<<< HEAD
       // Handle quota exhaustion (429)
       if (response.status === 429) {
         const errorData = await response.json();
         throw new QuotaExhaustedError(errorData);
       }
 
+=======
+>>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorText}`);
@@ -109,12 +122,15 @@ class ApiService {
         body: JSON.stringify(data),
       });
 
+<<<<<<< HEAD
       // Handle quota exhaustion (429)
       if (response.status === 429) {
         const errorData = await response.json();
         throw new QuotaExhaustedError(errorData);
       }
 
+=======
+>>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorText}`);
@@ -545,6 +561,7 @@ class ApiService {
     if (!response.ok) throw new Error('Failed to fetch execution');
     return response.json();
   }
+<<<<<<< HEAD
 
   // Quota management
   async getQuotaStatus(): Promise<QuotaStatus> {
@@ -566,6 +583,8 @@ class ApiService {
 
     return response.json();
   }
+=======
+>>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
 }
 
 export const apiService = new ApiService();

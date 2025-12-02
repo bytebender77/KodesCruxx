@@ -12,7 +12,10 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
+<<<<<<< HEAD
     "@stackframe/react": "latest",
+=======
+>>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
     "@supabase/supabase-js": "^2.57.4",
     "@types/react-syntax-highlighter": "^15.5.13",
     "lucide-react": "^0.344.0",
@@ -20,7 +23,10 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-markdown": "^10.1.0",
+<<<<<<< HEAD
     "react-router-dom": "^6.26.0",
+=======
+>>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
     "react-snowfall": "^2.3.0",
     "react-syntax-highlighter": "^16.1.0",
     "reactflow": "^11.11.4"

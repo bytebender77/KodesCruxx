@@ -1,12 +1,20 @@
+<<<<<<< HEAD
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useStackApp, useUser } from '@stackframe/react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://kodescruxx-backend-gnlc.onrender.com' : 'http://localhost:8000');
+=======
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+>>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
 
 interface User {
     id: string;
     email: string;
+<<<<<<< HEAD
     username?: string;
+=======
+>>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
     first_name?: string;
     last_name?: string;
     is_active?: boolean;
@@ -25,6 +33,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+<<<<<<< HEAD
     const stackApp = useStackApp();
     const stackUser = useUser();
     const [isLoading, setIsLoading] = useState(true);
@@ -103,6 +112,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             isAuthenticated: !!user,
             loading
         }}>
+=======
+    const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            fetchUser(token);
+        } else {
+            setLoading(false);
+        }
+    }, []);
+
+    const fetchUser = async (token: string) => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/auth/me`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            if (response.ok) {
+                const userData = await response.json();
+                setUser(userData);
+            } else {
+                logout();
+            }
+        } catch (error) {
+            console.error('Failed to fetch user', error);
+            logout();
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const login = (token: string) => {
+        localStorage.setItem('token', token);
+        fetchUser(token);
+    };
+
+    const logout = () => {
+        localStorage.removeItem('token');
+        setUser(null);
+    };
+
+    return (
+        <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user, loading }}>
+>>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
             {children}
         </AuthContext.Provider>
     );

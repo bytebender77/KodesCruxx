@@ -1,7 +1,10 @@
 import { AlertCircle, Code2, Menu, X, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+<<<<<<< HEAD
 import QuotaDisplay from '../QuotaDisplay';
+=======
+>>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
 
 interface HeaderProps {
     backendConnected: boolean | null;
@@ -31,9 +34,12 @@ export default function Header({ backendConnected }: HeaderProps) {
             </div>
 
             <div className="flex items-center gap-4">
+<<<<<<< HEAD
                 {/* Quota Display */}
                 <QuotaDisplay />
 
+=======
+>>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
                 {/* User Profile Section */}
                 {/* User Profile Section - Always Visible */}
                 <div className="hidden md:flex items-center gap-4 pl-4 border-l border-white/5">

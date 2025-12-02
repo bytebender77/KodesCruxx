@@ -31,6 +31,7 @@ If you need any help, please contact us via our CodeCanyon profile.
 
 ---
 *© 2025 KodesCruxx. All rights reserved.*
+<<<<<<< HEAD
 
 ---
 
@@ -136,3 +137,5 @@ The KodesCruxx application is a modern, full-stack AI coding assistant built wit
 1.  **Payment Integration**: Implement Stripe/Razorpay for premium quotas.
 2.  **CDN**: Serve static assets (images, JS) via a CDN (Cloudflare/AWS CloudFront).
 3.  **Testing**: Add comprehensive unit and integration tests (currently minimal).
+=======
+>>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
