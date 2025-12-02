@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { X, User, Lock, Mail, ArrowRight } from 'lucide-react';
-import { API_BASE_URL } from '../../services/api';
+import { useStackApp } from '@stackframe/react';
+import { X, Lock, Mail, ArrowRight } from 'lucide-react';
 
 interface AuthModalProps {
     isOpen: boolean;
@@ -10,12 +9,11 @@ interface AuthModalProps {
 
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     const [isLogin, setIsLogin] = useState(true);
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
     const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const { login } = useAuth();
+    const stackApp = useStackApp();
 
     if (!isOpen) return null;
 
@@ -26,44 +24,24 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
         try {
             if (isLogin) {
-                // Login flow - use /token endpoint
-                const formData = new FormData();
-                formData.append('username', username); // Can be email or username
-                formData.append('password', password);
-
-                const response = await fetch(`${API_BASE_URL}/token`, {
-                    method: 'POST',
-                    body: formData,
+                // Login with Stack Auth
+                const result = await stackApp.signInWithCredential({
+                    email,
+                    password
                 });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.detail || 'Invalid credentials');
+                if (result.status === 'error') {
+                    throw new Error(result.error.message || 'Login failed');
                 }
-
-                const data = await response.json();
-                login(data.access_token);
                 onClose();
             } else {
-                // Signup flow - use /register endpoint
-                const response = await fetch(`${API_BASE_URL}/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        username,
-                        email: email || username, // Use username as email if email not provided
-                        password
-                    }),
+                // Signup with Stack Auth
+                const result = await stackApp.signUpWithCredential({
+                    email,
+                    password
                 });
-
-                if (!response.ok) {
-                    const data = await response.json().catch(() => ({}));
-                    throw new Error(data.detail || 'Registration failed');
+                if (result.status === 'error') {
+                    throw new Error(result.error.message || 'Signup failed');
                 }
-
-                const data = await response.json();
-                // Auto login after register
-                login(data.access_token);
                 onClose();
             }
         } catch (err: any) {
@@ -96,35 +74,19 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-1">
-                        <label className="text-sm font-medium text-gray-300 ml-1">Username</label>
+                        <label className="text-sm font-medium text-gray-300 ml-1">Email</label>
                         <div className="relative">
-                            <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                             <input
-                                type="text"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 className="w-full bg-black/20 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                                placeholder="Enter username"
+                                placeholder="Enter your email"
                                 required
                             />
                         </div>
                     </div>
-
-                    {!isLogin && (
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-gray-300 ml-1">Email (optional)</label>
-                            <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                                <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full bg-black/20 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                                    placeholder="Enter email (optional)"
-                                />
-                            </div>
-                        </div>
-                    )}
 
                     <div className="space-y-1">
                         <label className="text-sm font-medium text-gray-300 ml-1">Password</label>
