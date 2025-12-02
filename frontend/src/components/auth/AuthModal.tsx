@@ -63,14 +63,24 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         }
     };
 
-    const handleGithubAuth = () => {
-        // GitHub OAuth with Stack Auth (you'll need to configure this in Stack Auth dashboard)
-        console.log('GitHub auth not yet configured');
+    const handleGithubAuth = async () => {
+        try {
+            await stackApp.signInWithOAuth({ provider: 'github' });
+            // Stack Auth will handle the redirect flow automatically
+        } catch (err) {
+            console.error('GitHub auth error:', err);
+            setError('GitHub authentication failed. Please try again.');
+        }
     };
 
-    const handleGoogleAuth = () => {
-        // Google OAuth with Stack Auth (you'll need to configure this in Stack Auth dashboard)
-        console.log('Google auth not yet configured');
+    const handleGoogleAuth = async () => {
+        try {
+            await stackApp.signInWithOAuth({ provider: 'google' });
+            // Stack Auth will handle the redirect flow automatically
+        } catch (err) {
+            console.error('Google auth error:', err);
+            setError('Google authentication failed. Please try again.');
+        }
     };
 
     if (!isOpen) return null;
