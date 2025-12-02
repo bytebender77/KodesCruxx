@@ -6,7 +6,7 @@ const getWebSocketUrl = () => {
   if (wsUrl) {
     return wsUrl;
   }
-
+  
   // Auto-detect based on resolved API base URL
   if (API_BASE_URL.startsWith('https://')) {
     // Production: use secure WebSocket

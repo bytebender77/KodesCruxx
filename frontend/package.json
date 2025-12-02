@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
-    "@stackframe/react": "^1.0.0",
+    "@stackframe/react": "latest",
     "@supabase/supabase-js": "^2.57.4",
     "@types/react-syntax-highlighter": "^15.5.13",
     "lucide-react": "^0.344.0",
