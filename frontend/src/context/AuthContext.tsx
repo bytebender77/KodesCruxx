@@ -1,5 +1,7 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useStackApp, useUser } from '@stackframe/react';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://kodescruxx-backend-gnlc.onrender.com' : 'http://localhost:8000');
 
 interface User {
     id: string;
@@ -14,7 +16,7 @@ interface User {
 
 interface AuthContextType {
     user: User | null;
-    login: (token: string) => void; // Kept for backward compatibility, but Neon Auth handles this
+    login: (token: string) => void;
     logout: () => void;
     isAuthenticated: boolean;
     loading: boolean;
@@ -25,7 +27,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const stackApp = useStackApp();
     const stackUser = useUser();
-    const loading = stackUser === undefined; // undefined means loading
+    const [isLoading, setIsLoading] = useState(true);
+    const loading = stackUser === undefined || isLoading;
 
     // Convert Neon Auth user to our User interface
     const user: User | null = stackUser ? {
@@ -38,23 +41,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         auth_provider: 'neon',
     } : null;
 
+    // Sync Stack Auth user with backend and get JWT token
+    useEffect(() => {
+        const syncWithBackend = async () => {
+            if (!stackUser || !stackUser.primaryEmail) {
+                setIsLoading(false);
+                return;
+            }
+
+            // Check if we already have a token
+            const existingToken = localStorage.getItem('token');
+            if (existingToken) {
+                setIsLoading(false);
+                return;
+            }
+
+            try {
+                // Create/sync user with backend
+                const response = await fetch(`${API_BASE_URL}/auth/sync-stack-user`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: stackUser.primaryEmail,
+                        stack_user_id: stackUser.id,
+                        display_name: stackUser.displayName || '',
+                    }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.access_token) {
+                        localStorage.setItem('token', data.access_token);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to sync with backend:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        syncWithBackend();
+    }, [stackUser]);
+
     const login = (token: string) => {
-        // Neon Auth handles login automatically, but we keep this for backward compatibility
-        // Token is stored automatically by Neon Auth
-        console.log('Login handled by Neon Auth');
+        localStorage.setItem('token', token);
     };
 
     const logout = async () => {
+        localStorage.removeItem('token');
         await stackApp.signOut();
     };
 
     return (
-        <AuthContext.Provider value={{ 
-            user, 
-            login, 
-            logout, 
-            isAuthenticated: !!user, 
-            loading 
+        <AuthContext.Provider value={{
+            user,
+            login,
+            logout,
+            isAuthenticated: !!user,
+            loading
         }}>
             {children}
         </AuthContext.Provider>

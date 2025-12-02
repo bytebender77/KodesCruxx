@@ -82,8 +82,12 @@ async def startup_event():
         logger.error(f"⚠️ Database table creation error (non-fatal): {e}")
         # Don't fail startup - tables might already exist
 
+import stack_auth_sync
+
 # Include new Auth Router
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
+app.include_router(stack_auth_sync.router)  # Stack Auth sync endpoint
+app.include_router(workflow_router)
 
 # Get allowed origins from environment variable or use defaults (needed before CORS middleware)
 ALLOWED_ORIGINS_STR = os.getenv(
