@@ -22,9 +22,18 @@ services:
       - key: LOG_LEVEL
         value: INFO
       - key: DATABASE_URL
-        value: sqlite:///./kodescruxx.db
+        fromDatabase:
+          name: kodescruxx-db
+          property: connectionString
       - key: ALLOWED_ORIGINS
         value: https://kodes-cruxx.vercel.app
         sync: false
     healthCheckPath: /health
     autoDeploy: true
+
+databases:
+  - name: kodescruxx-db
+    databaseName: kodescruxx
+    user: kodescruxx_user
+    plan: free
+    region: oregon
