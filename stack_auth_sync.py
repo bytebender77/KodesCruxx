@@ -2,11 +2,11 @@
 Stack Auth Integration Endpoint
 Creates a backend user for Stack Auth authenticated users and returns a JWT token
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from auth import create_access_token
-from database import get_db
-from models import User
+from app.core.database import get_db
+from app.users.models import User
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 import secrets
@@ -20,7 +20,7 @@ class StackUserSync(BaseModel):
     display_name: str = ""
 
 @router.post("/sync-stack-user")
-def sync_stack_user(data: StackUserSync, db: Session = next(get_db())):
+def sync_stack_user(data: StackUserSync, db: Session = Depends(get_db)):
     """
     Sync a Stack Auth user with the backend database.
     Creates a new user if they don't exist, or returns existing user.

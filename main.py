@@ -56,6 +56,7 @@ from ai_engine import (
 from code_executor import executor, SUPPORTED_LANGUAGES
 from websocket_handler import connection_manager
 from room_manager import room_manager
+import stack_auth_sync
 # Removed duplicate imports - using new auth system above
 
 from app.core.database import engine as new_engine, Base as NewBase
@@ -81,8 +82,6 @@ async def startup_event():
     except Exception as e:
         logger.error(f"⚠️ Database table creation error (non-fatal): {e}")
         # Don't fail startup - tables might already exist
-
-import stack_auth_sync
 
 # Include new Auth Router
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
