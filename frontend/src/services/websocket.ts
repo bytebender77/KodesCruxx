@@ -1,16 +1,12 @@
 // Determine WebSocket URL based on environment
-<<<<<<< HEAD
 import { API_BASE_URL } from './api';
 
-=======
->>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
 const getWebSocketUrl = () => {
   const wsUrl = import.meta.env.VITE_WS_URL;
   if (wsUrl) {
     return wsUrl;
   }
   
-<<<<<<< HEAD
   // Auto-detect based on resolved API base URL
   if (API_BASE_URL.startsWith('https://')) {
     // Production: use secure WebSocket
@@ -18,16 +14,6 @@ const getWebSocketUrl = () => {
   } else {
     // Development: use regular WebSocket
     return API_BASE_URL.replace('http://', 'ws://');
-=======
-  // Auto-detect based on API URL
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-  if (apiUrl.startsWith('https://')) {
-    // Production: use secure WebSocket
-    return apiUrl.replace('https://', 'wss://');
-  } else {
-    // Development: use regular WebSocket
-    return apiUrl.replace('http://', 'ws://');
->>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
   }
 };
 

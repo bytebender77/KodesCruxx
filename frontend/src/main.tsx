@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
@@ -28,15 +27,5 @@ createRoot(document.getElementById('root')!).render(
         </StackProvider>
       </BrowserRouter>
     </Suspense>
-=======
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import App from './App.tsx';
-import './index.css';
-
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
->>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
   </StrictMode>
 );

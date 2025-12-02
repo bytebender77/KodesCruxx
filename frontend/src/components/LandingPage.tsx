@@ -8,25 +8,15 @@ import {
     ArrowRight,
     Menu,
     X,
-<<<<<<< HEAD
     ChevronDown
 } from 'lucide-react';
 import AuthModal from './auth/AuthModal';
-=======
-    Mail,
-    Lock,
-    ChevronDown,
-    Github
-} from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
->>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
 
 interface LandingPageProps {
     onNavigate?: (page: 'landing' | 'features' | 'pricing' | 'how-it-works' | 'changelog' | 'docs' | 'about' | 'blog' | 'careers' | 'contact') => void;
 }
 
 
-<<<<<<< HEAD
 export default function LandingPage({ onNavigate }: LandingPageProps) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
@@ -40,26 +30,6 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
     const handleLogin = () => {
         setIsAuthModalOpen(true);
     };
-=======
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-
-export default function LandingPage({ onNavigate }: LandingPageProps) {
-    const { login: authLogin } = useAuth();
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-    const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-    const [isScrolled, setIsScrolled] = useState(false);
-
-    // Form states
-    const [loginEmail, setLoginEmail] = useState('');
-    const [loginPassword, setLoginPassword] = useState('');
-    const [signupFirstName, setSignupFirstName] = useState('');
-    const [signupLastName, setSignupLastName] = useState('');
-    const [signupEmail, setSignupEmail] = useState('');
-    const [signupPassword, setSignupPassword] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
->>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
 
     const scrollSectionRef = useRef<HTMLDivElement>(null);
     const scrollTrackRef = useRef<HTMLDivElement>(null);
@@ -108,11 +78,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
                 el.removeEventListener('mouseleave', handleMouseLeave);
             });
         };
-<<<<<<< HEAD
     }, [isMobileMenuOpen]);
-=======
-    }, [isMobileMenuOpen, isAuthModalOpen]);
->>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
 
     // Horizontal Scroll Logic
     useEffect(() => {
@@ -156,98 +122,6 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
         document.body.style.overflow = !isMobileMenuOpen ? 'hidden' : '';
     };
 
-<<<<<<< HEAD
-=======
-    // Form handlers
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
-        setError('');
-
-        try {
-            const formData = new URLSearchParams();
-            formData.append('username', loginEmail);
-            formData.append('password', loginPassword);
-
-            const response = await fetch(`${API_BASE_URL}/auth/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: formData,
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || 'Login failed');
-            }
-
-            const data = await response.json();
-
-            // Use AuthContext login method
-            authLogin(data.access_token);
-
-            // Close modal - AuthContext will handle navigation
-            setIsAuthModalOpen(false);
-
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Login failed');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleSignup = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
-        setError('');
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/auth/signup`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: signupEmail,
-                    password: signupPassword,
-                    first_name: signupFirstName,
-                    last_name: signupLastName,
-                }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || 'Signup failed');
-            }
-
-            const data = await response.json();
-
-            // Use AuthContext login method
-            authLogin(data.access_token);
-
-            // Close modal - AuthContext will handle navigation
-            setIsAuthModalOpen(false);
-
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Signup failed');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const openAuthModal = (mode: 'login' | 'signup') => {
-        setAuthMode(mode);
-        setIsAuthModalOpen(true);
-        document.body.style.overflow = 'hidden';
-    };
-
-    const closeAuthModal = () => {
-        setIsAuthModalOpen(false);
-        document.body.style.overflow = '';
-    };
-
->>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
     return (
         <div className="text-slate-400 selection:bg-orange-500/30 selection:text-white antialiased">
 
@@ -280,13 +154,8 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
                     </div>
 
                     <div className="hidden md:flex items-center gap-4">
-<<<<<<< HEAD
                         <button onClick={handleLogin} className="text-sm font-mono hover:text-white transition-colors">Log In</button>
                         <button onClick={handleSignup} className="bg-white text-black px-5 py-2 rounded-full text-sm font-semibold hover:bg-slate-200 transition-all transform hover:scale-105 active:scale-95">
-=======
-                        <button onClick={() => openAuthModal('login')} className="text-sm font-mono hover:text-white transition-colors">Log In</button>
-                        <button onClick={() => openAuthModal('signup')} className="bg-white text-black px-5 py-2 rounded-full text-sm font-semibold hover:bg-slate-200 transition-all transform hover:scale-105 active:scale-95">
->>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
                             Get Started
                         </button>
                     </div>
@@ -304,13 +173,8 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
                     <button onClick={() => { toggleMobileMenu(); onNavigate?.('how-it-works'); }} className="text-left hover:text-orange-500">How it Works</button>
                     <button onClick={() => { toggleMobileMenu(); onNavigate?.('pricing'); }} className="text-left hover:text-orange-500">Pricing</button>
                     <hr className="border-white/10" />
-<<<<<<< HEAD
                     <button onClick={() => { toggleMobileMenu(); handleLogin(); }} className="text-left text-orange-500 font-mono text-lg">Log In</button>
                     <button onClick={() => { toggleMobileMenu(); handleSignup(); }} className="text-left text-lg">Get Started</button>
-=======
-                    <button onClick={() => { toggleMobileMenu(); openAuthModal('login'); }} className="text-left text-orange-500 font-mono text-lg">Log In</button>
-                    <button onClick={() => { toggleMobileMenu(); openAuthModal('signup'); }} className="text-left text-lg">Get Started</button>
->>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
                 </div>
                 <button onClick={toggleMobileMenu} className="absolute top-6 right-6 text-white">
                     <X />
@@ -343,22 +207,14 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-<<<<<<< HEAD
                         <button onClick={handleSignup} className="group relative px-8 py-4 bg-white text-black rounded-full font-semibold text-lg overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
-=======
-                        <button onClick={() => openAuthModal('signup')} className="group relative px-8 py-4 bg-white text-black rounded-full font-semibold text-lg overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
->>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
                             <span className="relative z-10 flex items-center gap-2">
                                 Start Coding Now <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                             </span>
                             <div className="absolute inset-0 bg-slate-200 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></div>
                         </button>
 
-<<<<<<< HEAD
                         <button onClick={handleSignup} className="px-8 py-4 bg-white/5 backdrop-blur-md border border-white/10 text-white rounded-full font-semibold text-lg hover:bg-white/10 hover:border-white/20 transition-all active:scale-95">
-=======
-                        <button onClick={() => openAuthModal('signup')} className="px-8 py-4 bg-white/5 backdrop-blur-md border border-white/10 text-white rounded-full font-semibold text-lg hover:bg-white/10 hover:border-white/20 transition-all active:scale-95">
->>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
                             View Demo
                         </button>
                     </div>
@@ -493,11 +349,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
                 <div className="container mx-auto px-6 text-center relative z-10">
                     <h2 className="text-5xl md:text-7xl font-semibold tracking-tight mb-8 text-white">Ready to start?</h2>
                     <p className="text-xl text-slate-400 mb-12 max-w-2xl mx-auto">Join thousands of developers building the future with KodesCruxx.</p>
-<<<<<<< HEAD
                     <button onClick={handleSignup} className="px-10 py-5 bg-orange-500 text-white rounded-full font-semibold text-xl hover:bg-orange-600 transition-all shadow-[0_0_40px_rgba(249,115,22,0.4)] hover:shadow-[0_0_60px_rgba(249,115,22,0.6)] transform hover:-translate-y-1">
-=======
-                    <button onClick={() => openAuthModal('signup')} className="px-10 py-5 bg-orange-500 text-white rounded-full font-semibold text-xl hover:bg-orange-600 transition-all shadow-[0_0_40px_rgba(249,115,22,0.4)] hover:shadow-[0_0_60px_rgba(249,115,22,0.6)] transform hover:-translate-y-1">
->>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
                         Get Started for Free
                     </button>
                 </div>
@@ -554,13 +406,8 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
                             </p>
 
                             <div className="flex items-center gap-6">
-<<<<<<< HEAD
                                 <a href="https://www.linkedin.com/in/palak-soni-292280288/" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-orange-500 transition-colors flex items-center gap-2">
                                     <span className="text-xs font-mono tracking-widest">BUILT BY AND FOUNDED BY PALAK SONI</span>
-=======
-                                <a href="https://www.linkedin.com/company/kodescruxx/?viewAsMember=true" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-orange-500 transition-colors flex items-center gap-2">
-                                    <span className="text-xs font-mono tracking-widest">BUILT BY BYTEBENDER</span>
->>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
                                 </a>
                             </div>
                         </div>
@@ -568,189 +415,8 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
                 </div>
             </footer>
 
-<<<<<<< HEAD
             {/* Auth Modal */}
             <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
         </div>
-=======
-            {/* REDESIGNED SPLIT-LAYOUT AUTH MODAL */}
-            <div className={`fixed inset-0 z-[100] flex items-center justify-center transition-opacity duration-300 ${isAuthModalOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
-                {/* Backdrop */}
-                <div onClick={closeAuthModal} className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-
-                {/* Modal Content (Wide) */}
-                <div className={`relative w-full max-w-4xl bg-[#0e0e0e] rounded-2xl border border-white/10 shadow-2xl transform transition-all duration-300 overflow-hidden flex flex-col md:flex-row h-auto md:h-[600px] ${isAuthModalOpen ? 'scale-100' : 'scale-95'}`}>
-
-                    {/* Left Side: Visual Section (CSS-only Composition) */}
-                    {/* Left Side: Visual Section */}
-                    <div className="hidden md:flex w-1/2 relative overflow-hidden bg-[#050505] flex-col justify-between p-12 border-r border-white/5">
-                        <div className="absolute inset-0 z-0">
-                            <img src="/images/auth-banner.jpg" alt="Auth Banner" className="w-full h-full object-cover opacity-80" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent" />
-                        </div>
-
-                        {/* Quote / Bottom Text */}
-                        <div className="relative z-10 mt-auto">
-                            <blockquote className="text-xl font-medium text-white mb-2 leading-relaxed">
-                                "The best way to predict the future is to invent it."
-                            </blockquote>
-                            <cite className="text-sm font-mono text-slate-500 not-italic tracking-wide block uppercase">
-                                — Built for Builders
-                            </cite>
-                        </div>
-                    </div>
-
-                    {/* Right Side: Form */}
-                    <div className="w-full md:w-1/2 p-8 md:p-10 flex flex-col justify-center relative z-10 bg-[#0e0e0e]">
-
-                        {/* Close Button for Desktop (Moved here) */}
-                        <button onClick={closeAuthModal} className="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors z-20 hover:bg-white/10 p-2 rounded-full hidden md:block">
-                            <X className="w-6 h-6" />
-                        </button>
-
-                        {/* Header */}
-                        <div className="flex justify-between items-start mb-6">
-                            <div>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="w-6 h-6 rounded bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
-                                        <Code2 className="text-white w-3 h-3" />
-                                    </div>
-                                    <span className="font-semibold tracking-tight text-white">KodesCruxx</span>
-                                </div>
-                                <h2 className="text-2xl font-semibold text-white tracking-tight">
-                                    {authMode === 'login' ? 'Welcome back' : 'Create account'}
-                                </h2>
-                            </div>
-                            <button onClick={closeAuthModal} className="text-slate-500 hover:text-white transition-colors p-1 hover:bg-white/5 rounded-md absolute top-6 right-6 md:hidden">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        {/* Social Auth */}
-                        <div className="grid grid-cols-2 gap-3 mb-6">
-                            <button onClick={() => window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/auth/github/login`} className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg py-2.5 transition-colors group">
-                                <Github className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
-                                <span className="text-sm font-medium text-slate-300 group-hover:text-white">GitHub</span>
-                            </button>
-                            <button onClick={() => window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/auth/google/login`} className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg py-2.5 transition-colors group">
-                                <svg className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                    <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"></path>
-                                </svg>
-                                <span className="text-sm font-medium text-slate-300 group-hover:text-white">Google</span>
-                            </button>
-                        </div>
-
-                        <div className="relative mb-6">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-white/10"></div>
-                            </div>
-                            <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-[#0e0e0e] px-2 text-slate-500 font-medium tracking-wider">Or continue with</span>
-                            </div>
-                        </div>
-
-                        {/* Login Form */}
-                        {authMode === 'login' && (
-                            <form className="space-y-4" onSubmit={handleLogin}>
-                                {error && <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-2 rounded-lg">{error}</div>}
-                                <div>
-                                    <label className="text-xs font-medium text-slate-400 mb-1.5 block">Email address</label>
-                                    <div className="relative">
-                                        <input type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} required className="w-full bg-[#050505] border border-white/10 focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 transition-all rounded-lg px-3 py-2.5 pl-10 text-sm text-white placeholder-slate-600 outline-none" placeholder="name@company.com" />
-                                        <div className="absolute left-3 top-2.5 text-slate-600 pointer-events-none">
-                                            <Mail className="w-4 h-4" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <div className="flex items-center justify-between mb-1.5">
-                                        <label className="text-xs font-medium text-slate-400">Password</label>
-                                        <a href="#" className="text-xs text-orange-500 hover:text-orange-400 hover:underline">Forgot password?</a>
-                                    </div>
-                                    <div className="relative">
-                                        <input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} required className="w-full bg-[#050505] border border-white/10 focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 transition-all rounded-lg px-3 py-2.5 pl-10 text-sm text-white placeholder-slate-600 outline-none" placeholder="••••••••" />
-                                        <div className="absolute left-3 top-2.5 text-slate-600 pointer-events-none">
-                                            <Lock className="w-4 h-4" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-2 mt-2">
-                                    <button type="button" role="checkbox" className="w-4 h-4 rounded border border-white/20 bg-white/5 flex items-center justify-center hover:border-orange-500/50 transition-colors group" onClick={(e) => e.currentTarget.classList.toggle('active')}>
-                                        <div className="w-2.5 h-2.5 rounded-[2px] bg-orange-500 opacity-0 group-[.active]:opacity-100 transition-opacity"></div>
-                                    </button>
-                                    <span className="text-xs text-slate-400 select-none">Keep me signed in</span>
-                                </div>
-
-                                <button type="submit" disabled={isLoading} className="w-full bg-white text-black font-semibold rounded-lg py-2.5 mt-2 hover:bg-slate-200 transition-all active:scale-95 text-sm shadow-[0_0_15px_rgba(255,255,255,0.1)] disabled:opacity-50 disabled:cursor-not-allowed">
-                                    {isLoading ? 'Signing In...' : 'Sign In'}
-                                </button>
-
-                                <p className="text-center text-xs text-slate-500 mt-4">
-                                    Don't have an account? <button type="button" onClick={() => setAuthMode('signup')} className="text-orange-500 hover:underline font-medium">Sign up</button>
-                                </p>
-                            </form>
-                        )}
-
-                        {/* Sign Up Form */}
-                        {authMode === 'signup' && (
-                            <form className="space-y-4" onSubmit={handleSignup}>
-                                {error && <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-2 rounded-lg">{error}</div>}
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="text-xs font-medium text-slate-400 mb-1.5 block">First name</label>
-                                        <input type="text" value={signupFirstName} onChange={(e) => setSignupFirstName(e.target.value)} required className="w-full bg-[#050505] border border-white/10 focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 transition-all rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-600 outline-none" placeholder="John" />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-medium text-slate-400 mb-1.5 block">Last name</label>
-                                        <input type="text" value={signupLastName} onChange={(e) => setSignupLastName(e.target.value)} required className="w-full bg-[#050505] border border-white/10 focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 transition-all rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-600 outline-none" placeholder="Doe" />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="text-xs font-medium text-slate-400 mb-1.5 block">Email address</label>
-                                    <div className="relative">
-                                        <input type="email" value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} required className="w-full bg-[#050505] border border-white/10 focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 transition-all rounded-lg px-3 py-2.5 pl-10 text-sm text-white placeholder-slate-600 outline-none" placeholder="name@company.com" />
-                                        <div className="absolute left-3 top-2.5 text-slate-600 pointer-events-none">
-                                            <Mail className="w-4 h-4" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="text-xs font-medium text-slate-400 mb-1.5 block">Password</label>
-                                    <div className="relative">
-                                        <input type="password" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} required minLength={8} className="w-full bg-[#050505] border border-white/10 focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 transition-all rounded-lg px-3 py-2.5 pl-10 text-sm text-white placeholder-slate-600 outline-none" placeholder="Create a password" />
-                                        <div className="absolute left-3 top-2.5 text-slate-600 pointer-events-none">
-                                            <Lock className="w-4 h-4" />
-                                        </div>
-                                    </div>
-                                    <p className="text-[10px] text-slate-600 mt-1">Must be at least 8 characters.</p>
-                                </div>
-
-                                <button type="submit" disabled={isLoading} className="w-full bg-gradient-to-r from-orange-500 to-red-600 text-white font-semibold rounded-lg py-2.5 mt-2 hover:opacity-90 transition-all active:scale-95 text-sm shadow-[0_0_15px_rgba(249,115,22,0.3)] disabled:opacity-50 disabled:cursor-not-allowed">
-                                    {isLoading ? 'Creating Account...' : 'Create Account'}
-                                </button>
-
-                                <p className="text-center text-xs text-slate-500 mt-4">
-                                    Already have an account? <button type="button" onClick={() => setAuthMode('login')} className="text-orange-500 hover:underline font-medium">Log in</button>
-                                </p>
-                            </form>
-                        )}
-
-                        {/* Small Footer inside Form */}
-                        <div className="mt-auto pt-6 border-t border-white/5 text-center md:text-left">
-                            <p className="text-[10px] text-slate-600">
-                                By continuing, you agree to our <a href="#" className="hover:text-slate-400 transition-colors">Terms</a> and <a href="#" className="hover:text-slate-400 transition-colors">Privacy Policy</a>.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
->>>>>>> c3c673ea (feat: add GitHub and Google OAuth with Stack Auth)
     );
 }

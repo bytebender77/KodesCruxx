@@ -56,6 +56,7 @@ from ai_engine import (
 from code_executor import executor, SUPPORTED_LANGUAGES
 from websocket_handler import connection_manager
 from room_manager import room_manager
+from workflow_engine import router as workflow_router
 import stack_auth_sync
 # Removed duplicate imports - using new auth system above
 
