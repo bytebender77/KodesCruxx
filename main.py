@@ -56,7 +56,6 @@ from ai_engine import (
 from code_executor import executor, SUPPORTED_LANGUAGES
 from websocket_handler import connection_manager
 from room_manager import room_manager
-from workflow_engine import router as workflow_router
 import stack_auth_sync
 # Removed duplicate imports - using new auth system above
 
@@ -87,7 +86,6 @@ async def startup_event():
 # Include new Auth Router
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
 app.include_router(stack_auth_sync.router)  # Stack Auth sync endpoint
-app.include_router(workflow_router)
 
 # Get allowed origins from environment variable or use defaults (needed before CORS middleware)
 ALLOWED_ORIGINS_STR = os.getenv(
