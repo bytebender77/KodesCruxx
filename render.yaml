@@ -27,7 +27,6 @@ services:
           property: connectionString
       - key: ALLOWED_ORIGINS
         value: https://kodes-cruxx.vercel.app
-        sync: false
     healthCheckPath: /health
     autoDeploy: true
 
