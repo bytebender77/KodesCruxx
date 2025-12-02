@@ -1,0 +1,10 @@
+INFO:     Will watch for changes in these directories: ['/Users/kunalkumargupta/Desktop/kodescru-xxx-main']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [53654] using WatchFiles
+INFO:ai_engine:✅ LLM initialized with model: gpt-4o-mini
+INFO:main:Loaded SECRET_KEY starts with: 5aQ6W...
+INFO:main:✅ Using custom SECRET_KEY from environment.
+INFO:     Started server process [53709]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:59524 - "GET /quota/status HTTP/1.1" 200 OK
