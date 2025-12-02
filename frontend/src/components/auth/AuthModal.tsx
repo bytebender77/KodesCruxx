@@ -65,7 +65,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
     const handleGithubAuth = async () => {
         try {
-            await stackApp.signInWithOAuth({ provider: 'github' });
+            await stackApp.signInWithOAuth('github');
             // Stack Auth will handle the redirect flow automatically
         } catch (err) {
             console.error('GitHub auth error:', err);
@@ -75,7 +75,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
     const handleGoogleAuth = async () => {
         try {
-            await stackApp.signInWithOAuth({ provider: 'google' });
+            await stackApp.signInWithOAuth('google');
             // Stack Auth will handle the redirect flow automatically
         } catch (err) {
             console.error('Google auth error:', err);
