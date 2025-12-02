@@ -1,4 +1,11 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// Central API base URL used across the frontend.
+// Priority:
+// 1) Explicit Vercel/Env config via VITE_API_URL (no trailing slash)
+// 2) In production, default to the Render backend URL
+// 3) In development, default to localhost
+export const API_BASE_URL =
+  (import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL.replace(/\/$/, '')) ||
+  (import.meta.env.PROD ? 'https://kodescruxx-backend-gnlc.onrender.com' : 'http://localhost:8000');
 
 export interface ApiRequest {
   language?: string;
@@ -15,6 +22,15 @@ export interface ApiResponse {
   response: string;
 }
 
+export interface QuotaStatus {
+  success: boolean;
+  quota_used: number;
+  quota_limit: number;
+  quota_remaining: number;
+  reset_at: string;
+  is_exhausted: boolean;
+}
+
 export interface ExecuteCodeResponse {
   success: boolean;
   output: string;
@@ -23,6 +39,17 @@ export interface ExecuteCodeResponse {
   stage?: string;
   exit_code?: number;
   version?: string;
+}
+
+// Custom error for quota exhaustion
+export class QuotaExhaustedError extends Error {
+  public quotaInfo: any;
+
+  constructor(quotaInfo: any) {
+    super(quotaInfo.message || 'Daily quota exhausted');
+    this.name = 'QuotaExhaustedError';
+    this.quotaInfo = quotaInfo;
+  }
 }
 
 class ApiService {
@@ -41,6 +68,12 @@ class ApiService {
         headers,
         body: JSON.stringify(data),
       });
+
+      // Handle quota exhaustion (429)
+      if (response.status === 429) {
+        const errorData = await response.json();
+        throw new QuotaExhaustedError(errorData);
+      }
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -75,6 +108,12 @@ class ApiService {
         headers,
         body: JSON.stringify(data),
       });
+
+      // Handle quota exhaustion (429)
+      if (response.status === 429) {
+        const errorData = await response.json();
+        throw new QuotaExhaustedError(errorData);
+      }
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -504,6 +543,27 @@ class ApiService {
       }
     });
     if (!response.ok) throw new Error('Failed to fetch execution');
+    return response.json();
+  }
+
+  // Quota management
+  async getQuotaStatus(): Promise<QuotaStatus> {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/quota/status`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch quota status');
+    }
+
     return response.json();
   }
 }

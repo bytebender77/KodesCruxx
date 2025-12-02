@@ -1,6 +1,7 @@
 import { AlertCircle, Code2, Menu, X, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import QuotaDisplay from '../QuotaDisplay';
 
 interface HeaderProps {
     backendConnected: boolean | null;
@@ -30,6 +31,9 @@ export default function Header({ backendConnected }: HeaderProps) {
             </div>
 
             <div className="flex items-center gap-4">
+                {/* Quota Display */}
+                <QuotaDisplay />
+
                 {/* User Profile Section */}
                 {/* User Profile Section - Always Visible */}
                 <div className="hidden md:flex items-center gap-4 pl-4 border-l border-white/5">

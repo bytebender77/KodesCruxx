@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Code2, Bug, Sparkles, ArrowRightLeft, BarChart3, Play, FileCode, Lightbulb, Map, Users, Terminal, Shield, FlaskConical, Wrench } from 'lucide-react';
-import { apiService } from './services/api';
+import { apiService, QuotaExhaustedError, API_BASE_URL } from './services/api';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { QuotaProvider, useQuota } from './context/QuotaContext';
+import QuotaExhaustedModal from './components/QuotaExhaustedModal';
 import LandingPage from './components/LandingPage';
 import FeaturesPage from './components/FeaturesPage';
 import PricingPage from './components/PricingPage';
@@ -53,6 +55,8 @@ type Feature =
 
 function AppContent() {
   const { isAuthenticated, loading: authLoading } = useAuth();
+  const { refreshQuota } = useQuota();
+  const [quotaModalOpen, setQuotaModalOpen] = useState(false);
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   const [activeFeature, setActiveFeature] = useState<Feature>('explain');
@@ -88,14 +92,12 @@ function AppContent() {
     if (assetEnv) {
       return assetEnv.replace(/\/$/, '');
     }
+    // Prefer explicit asset base override, otherwise reuse the resolved API_BASE_URL
     const apiEnv = import.meta.env.VITE_API_URL;
     if (apiEnv) {
       return apiEnv.replace(/\/$/, '');
     }
-    if (import.meta.env.DEV) {
-      return 'http://localhost:8000';
-    }
-    return 'https://kodescruxxx.onrender.com';
+    return API_BASE_URL;
   }, []);
 
   const buildImageUrl = useCallback((filename: string) => {
@@ -191,8 +193,7 @@ function AppContent() {
   useEffect(() => {
     const wakeBackend = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-        const wakeResponse = await fetch(`${apiUrl}/wake`, {
+        const wakeResponse = await fetch(`${API_BASE_URL}/wake`, {
           method: 'GET',
           headers: { 'Cache-Control': 'no-cache' },
         });
@@ -201,8 +202,7 @@ function AppContent() {
         }
       } catch (error) {
         try {
-          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-          const healthResponse = await fetch(`${apiUrl}/health`, {
+          const healthResponse = await fetch(`${API_BASE_URL}/health`, {
             method: 'GET',
             headers: { 'Cache-Control': 'no-cache' },
           });
@@ -228,8 +228,7 @@ function AppContent() {
   useEffect(() => {
     const loadSupportedLanguages = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-        const response = await fetch(`${apiUrl}/supported_languages`);
+        const response = await fetch(`${API_BASE_URL}/supported_languages`);
         if (response.ok) {
           const data = await response.json();
           setSupportedLanguages(data.languages || []);
@@ -462,7 +461,15 @@ function AppContent() {
       apiService.logActivity(activeFeature, language, true, duration).catch(console.error);
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      // Handle quota exhaustion specifically
+      if (err instanceof QuotaExhaustedError) {
+        setQuotaModalOpen(true);
+        refreshQuota(); // Refresh quota display
+        setError('Daily quota exhausted. Please try again tomorrow.');
+      } else {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      }
+
       // Log failed activity
       const duration = performance.now() - (performance.now()); // Approximate
       apiService.logActivity(activeFeature, language, false, duration).catch(console.error);
@@ -708,6 +715,12 @@ function AppContent() {
         </div>
       </div>
       <Footer />
+
+      {/* Quota Exhausted Modal */}
+      <QuotaExhaustedModal
+        isOpen={quotaModalOpen}
+        onClose={() => setQuotaModalOpen(false)}
+      />
     </Layout>
   );
 }
@@ -715,7 +728,9 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <QuotaProvider>
+        <AppContent />
+      </QuotaProvider>
     </AuthProvider>
   );
 }

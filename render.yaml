@@ -21,10 +21,12 @@ services:
         value: "False"
       - key: LOG_LEVEL
         value: INFO
+      # Use PostgreSQL on Render for persistent storage.
+      # Set this in the Render dashboard to your actual PostgreSQL URL,
+      # e.g. postgresql://user:password@host:port/dbname
       - key: DATABASE_URL
-        value: sqlite:///./kodescruxx.db
-      - key: ALLOWED_ORIGINS
-        value: https://kodes-cruxx.vercel.app
         sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://kodes-cruxx-agbn.vercel.app
     healthCheckPath: /health
     autoDeploy: true
