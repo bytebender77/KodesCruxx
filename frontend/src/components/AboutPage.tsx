@@ -146,13 +146,6 @@ export default function AboutPage({ onBack }: AboutPageProps) {
                                     role: "Founder Product & Strategy, Backend & AI",
                                     linkedin: "https://www.linkedin.com/in/palak-soni-292280288/",
                                     image: "/images/team/palak.jpeg"
-                                },
-
-                                {
-                                    name: "Sujal Kumar",
-                                    role: "Design & Marketing, Full Stack Web Development",
-                                    linkedin: "https://www.linkedin.com/in/sujal-kumar-585135289/",
-                                    image: "/images/team/sujal.jpeg"
                                 }
                             ].map((member, i) => (
                                 <div key={i} className="group">
