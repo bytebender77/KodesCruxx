@@ -10,7 +10,7 @@ import {
     X,
     ChevronDown
 } from 'lucide-react';
-import { useStackApp } from '@stackframe/react';
+import AuthModal from './auth/AuthModal';
 
 interface LandingPageProps {
     onNavigate?: (page: 'landing' | 'features' | 'pricing' | 'how-it-works' | 'changelog' | 'docs' | 'about' | 'blog' | 'careers' | 'contact') => void;
@@ -18,17 +18,17 @@ interface LandingPageProps {
 
 
 export default function LandingPage({ onNavigate }: LandingPageProps) {
-    const stackApp = useStackApp();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
-    // Neon Auth handlers
+    // Custom auth handlers - show modal instead of redirecting
     const handleSignup = () => {
-        window.location.href = '/handler/sign-up';
+        setIsAuthModalOpen(true);
     };
 
     const handleLogin = () => {
-        window.location.href = '/handler/sign-in';
+        setIsAuthModalOpen(true);
     };
 
     const scrollSectionRef = useRef<HTMLDivElement>(null);
@@ -414,8 +414,9 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
                     </div>
                 </div>
             </footer>
+
+            {/* Auth Modal */}
+            <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
         </div>
-
-
     );
 }
