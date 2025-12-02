@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useStackApp, useUser } from '@stackframe/react';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://kodescruxx-backend-gnlc.onrender.com' : 'http://localhost:8000');
+const API_BASE_URL = (import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://kodescruxx-backend-gnlc.onrender.com' : 'http://localhost:8000')).replace(/\/$/, '');
 
 interface User {
     id: string;
