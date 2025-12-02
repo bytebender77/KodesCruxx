@@ -4,7 +4,7 @@ Creates a backend user for Stack Auth authenticated users and returns a JWT toke
 """
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from auth import create_access_token
+from app.auth import service as auth_service
 from app.core.database import get_db
 from app.users.models import User
 from sqlalchemy.orm import Session
@@ -32,7 +32,7 @@ def sync_stack_user(data: StackUserSync, db: Session = Depends(get_db)):
         
         if existing_user:
             # User exists, generate token
-            access_token = create_access_token(data={"sub": existing_user.email})
+            access_token, _ = auth_service.create_tokens(user_id=existing_user.id)
             return {
                 "access_token": access_token,
                 "token_type": "bearer",
@@ -73,7 +73,7 @@ def sync_stack_user(data: StackUserSync, db: Session = Depends(get_db)):
         db.refresh(new_user)
         
         # Generate JWT token
-        access_token = create_access_token(data={"sub": new_user.email})
+        access_token, _ = auth_service.create_tokens(user_id=new_user.id)
         
         return {
             "access_token": access_token,
