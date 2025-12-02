@@ -56,6 +56,8 @@ from ai_engine import (
 from code_executor import executor, SUPPORTED_LANGUAGES
 from websocket_handler import connection_manager
 from room_manager import room_manager
+from workflow_engine import router as workflow_router
+import stack_auth_sync
 # Removed duplicate imports - using new auth system above
 
 from app.core.database import engine as new_engine, Base as NewBase
@@ -65,11 +67,27 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-# Create tables for new auth system
-NewBase.metadata.create_all(bind=new_engine)
+# Create tables asynchronously on startup to avoid blocking health checks
+@app.on_event("startup")
+async def startup_event():
+    """Create database tables on startup - non-blocking"""
+    try:
+        # Create tables for new auth system
+        NewBase.metadata.create_all(bind=new_engine)
+        logger.info("✅ New auth tables created/verified")
+        
+        # Create tables for old models (including UserActivity for quota tracking)
+        from database import engine as old_engine
+        old_models.Base.metadata.create_all(bind=old_engine)
+        logger.info("✅ Legacy tables created/verified")
+    except Exception as e:
+        logger.error(f"⚠️ Database table creation error (non-fatal): {e}")
+        # Don't fail startup - tables might already exist
 
 # Include new Auth Router
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
+app.include_router(stack_auth_sync.router)  # Stack Auth sync endpoint
+app.include_router(workflow_router)
 
 # Get allowed origins from environment variable or use defaults (needed before CORS middleware)
 ALLOWED_ORIGINS_STR = os.getenv(
@@ -94,11 +112,26 @@ else:
     logger.info("✅ Using custom SECRET_KEY from environment.")
 
 # Add CORS middleware (must be before static files)
+# Add CORS middleware (must be before static files)
+# Combine configured origins with local development origins
+origins = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
+]
+
+# Add origins from settings if they exist (for production)
+if isinstance(ALLOWED_ORIGINS, list):
+    origins.extend(ALLOWED_ORIGINS)
+elif isinstance(ALLOWED_ORIGINS, str):
+    origins.append(ALLOWED_ORIGINS)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
+    allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
     max_age=3600,
@@ -172,9 +205,10 @@ class UserResponse(BaseModel):
     id: str
     username: str
     email: Optional[str] = None
-    
+    password: str
+
     class Config:
-        orm_mode = True
+        from_attributes = True  # Pydantic v2 (was orm_mode in v1)
 
 # Auth Endpoints - DEPRECATED
 # These endpoints are kept for backward compatibility but redirect to /auth/*
@@ -189,36 +223,152 @@ async def read_users_me(current_user: user_models.User = Depends(get_current_use
         "last_name": current_user.last_name
     }
 
+# ====================================================
+# BACKWARD COMPATIBLE ENDPOINTS
+# These redirect to the new auth system for compatibility
+# ====================================================
+
+@app.post("/register", response_model=Token)
+def register_user(user_data: UserCreate, db: Session = Depends(get_db)):
+    """Backward compatible registration endpoint - redirects to /auth/signup"""
+    from app.users import schemas as user_schemas
+    from app.users import repository as user_repo
+    from app.auth import service as auth_service
+    
+    # Check if email already exists (if email provided)
+    email = user_data.email or user_data.username
+    username = user_data.username or user_data.email
+    
+    if email:
+        db_user = user_repo.get_user_by_email(db, email=email)
+        if db_user:
+            raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Check if username already exists (if username provided)
+    if username:
+        db_user = user_repo.get_user_by_username(db, username=username)
+        if db_user:
+            raise HTTPException(status_code=400, detail="Username already taken")
+    
+    # Create user using new auth system
+    new_user_schema = user_schemas.UserCreate(
+        email=email,
+        username=username,
+        password=user_data.password,
+        first_name=None,
+        last_name=None
+    )
+    new_user = user_repo.create_user(db=db, user=new_user_schema)
+    access_token, refresh_token = auth_service.create_tokens(user_id=new_user.id)
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
+
+@app.post("/token", response_model=Token)
+def login_for_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends(), 
+    db: Session = Depends(get_db)
+):
+    """Backward compatible login endpoint - redirects to /auth/login"""
+    from app.auth import service as auth_service
+    
+    # Note: OAuth2PasswordRequestForm uses 'username' field, but we accept email or username
+    user = auth_service.authenticate_user(db, email=form_data.username, password=form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username/email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    access_token, refresh_token = auth_service.create_tokens(user_id=user.id)
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
+
 async def check_rate_limit(
     current_user: user_models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Check if user has exceeded daily rate limit"""
+    """
+    Enforce daily query quota - PRODUCTION READY
+    
+    - Hard limit: 20 queries per day per user
+    - No silent failures or bypasses
+    - Returns 429 with detailed JSON on quota exhaustion
+    """
     from datetime import datetime, timedelta
     
-    try:
-        # Get start of today (UTC)
-        today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    # Get start of today (UTC) - ensures consistent daily reset
+    today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # Count activities for today - atomic database query
+    # Using old_models for UserActivity table (from models.py)
+    count = db.query(old_models.UserActivity).filter(
+        old_models.UserActivity.user_id == current_user.id,
+        old_models.UserActivity.timestamp >= today
+    ).count()
+    
+    # HARD ENFORCEMENT - no exceptions
+    if count >= 20:
+        # Calculate reset time (start of next day UTC)
+        reset_time = today + timedelta(days=1)
         
-        # Count activities for today - using old_models for UserActivity table
-        count = db.query(old_models.UserActivity).filter(
-            old_models.UserActivity.user_id == current_user.id,
-            old_models.UserActivity.timestamp >= today
-        ).count()
-        
-        if count >= 20:
-            raise HTTPException(
-                status_code=429,
-                detail="Daily rate limit exceeded (20 queries per day). Please upgrade your plan."
-            )
-    except Exception as e:
-        # If UserActivity table doesn't exist, skip rate limiting
-        # This allows the app to work even without the activity tracking table
-        import logging
-        logging.warning(f"Rate limiting skipped: {str(e)}")
-        pass
+        raise HTTPException(
+            status_code=429,
+            detail={
+                "success": False,
+                "message": "Daily quota exhausted. You have reached your 20 queries for today.",
+                "quota_used": count,
+                "quota_limit": 20,
+                "quota_remaining": 0,
+                "reset_at": reset_time.isoformat() + "Z"
+            }
+        )
     
     return current_user
+
+@app.get("/quota/status")
+async def get_quota_status(
+    current_user: user_models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get current quota usage for authenticated user
+    
+    Returns:
+        - quota_used: Number of queries used today
+        - quota_limit: Maximum queries allowed per day (20)
+        - quota_remaining: Queries left for today
+        - reset_at: ISO timestamp when quota resets (midnight UTC)
+        - is_exhausted: Boolean indicating if quota is depleted
+    """
+    from datetime import datetime, timedelta
+    
+    # Get start of today (UTC)
+    today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # Count today's queries
+    count = db.query(old_models.UserActivity).filter(
+        old_models.UserActivity.user_id == current_user.id,
+        old_models.UserActivity.timestamp >= today
+    ).count()
+    
+    # Calculate reset time (start of next day UTC)
+    reset_time = today + timedelta(days=1)
+    
+    return {
+        "success": True,
+        "quota_used": count,
+        "quota_limit": 20,
+        "quota_remaining": max(0, 20 - count),
+        "reset_at": reset_time.isoformat() + "Z",
+        "is_exhausted": count >= 20
+    }
 
 @app.post("/explain")
 def explain(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
@@ -414,7 +564,13 @@ async def stream_refactor_code_endpoint(req: RequestModel, user: user_models.Use
 
 @app.get("/health")
 def health():
-    """Health check endpoint - also used to wake up backend from cold start"""
+    """Fast health check endpoint for Render - no blocking operations"""
+    # Fast response without LLM check to avoid timeout
+    return {"status": "ok", "message": "Backend is healthy"}
+
+@app.get("/health/detailed")
+def health_detailed():
+    """Detailed health check with LLM status - use for monitoring, not Render health checks"""
     health_status = check_llm_health()
     return {"status": "ok", "llm": health_status}
 
