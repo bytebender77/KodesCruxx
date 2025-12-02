@@ -7,6 +7,23 @@ export const API_BASE_URL =
   (import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL.replace(/\/$/, '')) ||
   (import.meta.env.PROD ? 'https://kodescruxx-backend-gnlc.onrender.com' : 'http://localhost:8000');
 
+// Helper to get authentication token
+async function getAuthToken(): Promise<string | null> {
+  // First try localStorage (where we store it after Stack Auth sync)
+  const token = localStorage.getItem('token');
+  if (token) return token;
+
+  // If not in localStorage, try to get it from Stack Auth directly
+  try {
+    const { stackClientApp } = await import('../stack');
+    const authJson = await stackClientApp.getAuthJson();
+    return authJson?.accessToken || null;
+  } catch (error) {
+    console.error('Failed to get auth token:', error);
+    return null;
+  }
+}
+
 export interface ApiRequest {
   language?: string;
   code?: string;
@@ -54,7 +71,7 @@ export class QuotaExhaustedError extends Error {
 
 class ApiService {
   private async request<T>(endpoint: string, data: ApiRequest): Promise<T> {
-    const token = localStorage.getItem('token');
+    const token = await getAuthToken();
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
@@ -95,7 +112,7 @@ class ApiService {
     onChunk: (chunk: string) => void
   ): Promise<void> {
     try {
-      const token = localStorage.getItem('token');
+      const token = await getAuthToken();
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
@@ -463,7 +480,7 @@ class ApiService {
 
   // Dashboard endpoints
   async getDashboardStats() {
-    const token = localStorage.getItem('token');
+    const token = await getAuthToken();
     const response = await fetch(`${API_BASE_URL}/dashboard/stats`, {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -474,7 +491,7 @@ class ApiService {
   }
 
   async getRecentActivity(limit: number = 10) {
-    const token = localStorage.getItem('token');
+    const token = await getAuthToken();
     const response = await fetch(`${API_BASE_URL}/dashboard/recent?limit=${limit}`, {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -485,7 +502,7 @@ class ApiService {
   }
 
   async logActivity(feature: string, language?: string, success: boolean = true, duration_ms?: number) {
-    const token = localStorage.getItem('token');
+    const token = await getAuthToken();
     const response = await fetch(`${API_BASE_URL}/activity/log`, {
       method: 'POST',
       headers: {
@@ -500,7 +517,7 @@ class ApiService {
 
   // Workflow endpoints
   async createWorkflow(name: string, nodes: string, edges: string, description?: string) {
-    const token = localStorage.getItem('token');
+    const token = await getAuthToken();
     const response = await fetch(`${API_BASE_URL}/workflows?name=${encodeURIComponent(name)}&nodes=${encodeURIComponent(nodes)}&edges=${encodeURIComponent(edges)}${description ? `&description=${encodeURIComponent(description)}` : ''}`, {
       method: 'POST',
       headers: {
@@ -513,7 +530,7 @@ class ApiService {
   }
 
   async getWorkflows() {
-    const token = localStorage.getItem('token');
+    const token = await getAuthToken();
     const response = await fetch(`${API_BASE_URL}/workflows`, {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -524,7 +541,7 @@ class ApiService {
   }
 
   async runWorkflow(workflowId: string) {
-    const token = localStorage.getItem('token');
+    const token = await getAuthToken();
     const response = await fetch(`${API_BASE_URL}/workflows/${workflowId}/run`, {
       method: 'POST',
       headers: {
@@ -536,7 +553,7 @@ class ApiService {
   }
 
   async getWorkflowExecution(executionId: string) {
-    const token = localStorage.getItem('token');
+    const token = await getAuthToken();
     const response = await fetch(`${API_BASE_URL}/workflows/executions/${executionId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -548,7 +565,7 @@ class ApiService {
 
   // Quota management
   async getQuotaStatus(): Promise<QuotaStatus> {
-    const token = localStorage.getItem('token');
+    const token = await getAuthToken();
 
     if (!token) {
       throw new Error('Not authenticated');
