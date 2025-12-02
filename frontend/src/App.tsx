@@ -1,9 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Code2, Bug, Sparkles, ArrowRightLeft, BarChart3, Play, FileCode, Lightbulb, Map, Users, Terminal, Shield, FlaskConical, Wrench } from 'lucide-react';
-import { apiService, QuotaExhaustedError } from './services/api';
+import { apiService } from './services/api';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { QuotaProvider, useQuota } from './context/QuotaContext';
-import QuotaExhaustedModal from './components/QuotaExhaustedModal';
 import LandingPage from './components/LandingPage';
 import FeaturesPage from './components/FeaturesPage';
 import PricingPage from './components/PricingPage';
@@ -55,8 +53,6 @@ type Feature =
 
 function AppContent() {
   const { isAuthenticated, loading: authLoading } = useAuth();
-  const { refreshQuota } = useQuota();
-  const [quotaModalOpen, setQuotaModalOpen] = useState(false);
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   const [activeFeature, setActiveFeature] = useState<Feature>('explain');
@@ -466,15 +462,7 @@ function AppContent() {
       apiService.logActivity(activeFeature, language, true, duration).catch(console.error);
 
     } catch (err) {
-      // Handle quota exhaustion specifically
-      if (err instanceof QuotaExhaustedError) {
-        setQuotaModalOpen(true);
-        refreshQuota(); // Refresh quota display
-        setError('Daily quota exhausted. Please try again tomorrow.');
-      } else {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      }
-
+      setError(err instanceof Error ? err.message : 'An error occurred');
       // Log failed activity
       const duration = performance.now() - (performance.now()); // Approximate
       apiService.logActivity(activeFeature, language, false, duration).catch(console.error);
@@ -720,12 +708,6 @@ function AppContent() {
         </div>
       </div>
       <Footer />
-
-      {/* Quota Exhausted Modal */}
-      <QuotaExhaustedModal
-        isOpen={quotaModalOpen}
-        onClose={() => setQuotaModalOpen(false)}
-      />
     </Layout>
   );
 }
@@ -733,9 +715,7 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <QuotaProvider>
-        <AppContent />
-      </QuotaProvider>
+      <AppContent />
     </AuthProvider>
   );
 }

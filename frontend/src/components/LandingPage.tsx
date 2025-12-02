@@ -503,8 +503,8 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
                             </p>
 
                             <div className="flex items-center gap-6">
-                                <a href="https://www.linkedin.com/in/palak-soni-292280288/" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-orange-500 transition-colors flex items-center gap-2">
-                                    <span className="text-xs font-mono tracking-widest">BUILT BY AND FOUNDED BY PALAK SONI</span>
+                                <a href="https://www.linkedin.com/company/kodescruxx/?viewAsMember=true" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-orange-500 transition-colors flex items-center gap-2">
+                                    <span className="text-xs font-mono tracking-widest">BUILT BY BYTEBENDER</span>
                                 </a>
                             </div>
                         </div>
