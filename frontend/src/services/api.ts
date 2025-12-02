@@ -5,7 +5,7 @@
 // 3) In development, default to localhost
 export const API_BASE_URL =
   (import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL.replace(/\/$/, '')) ||
-  (import.meta.env.PROD ? 'https://kodescruxxx.onrender.com' : 'http://localhost:8000');
+  (import.meta.env.PROD ? 'https://kodescruxx-backend-gnlc.onrender.com' : 'http://localhost:8000');
 
 export interface ApiRequest {
   language?: string;

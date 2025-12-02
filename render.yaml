@@ -27,6 +27,6 @@ services:
       - key: DATABASE_URL
         sync: false
       - key: ALLOWED_ORIGINS
-        value: https://kodes-cruxx.vercel.app
+        value: https://kodes-cruxx-agbn.vercel.app
     healthCheckPath: /health
     autoDeploy: true

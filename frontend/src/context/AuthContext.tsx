@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { API_BASE_URL } from '../services/api';
+import React, { createContext, useContext } from 'react';
+import { useStackApp, useUser } from '@stackframe/react';
 
 interface User {
     id: string;
@@ -14,7 +14,7 @@ interface User {
 
 interface AuthContextType {
     user: User | null;
-    login: (token: string) => void;
+    login: (token: string) => void; // Kept for backward compatibility, but Neon Auth handles this
     logout: () => void;
     isAuthenticated: boolean;
     loading: boolean;
@@ -23,51 +23,39 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(true);
+    const stackApp = useStackApp();
+    const stackUser = useUser();
+    const loading = stackUser === undefined; // undefined means loading
 
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            fetchUser(token);
-        } else {
-            setLoading(false);
-        }
-    }, []);
-
-    const fetchUser = async (token: string) => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/auth/me`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            if (response.ok) {
-                const userData = await response.json();
-                setUser(userData);
-            } else {
-                logout();
-            }
-        } catch (error) {
-            console.error('Failed to fetch user', error);
-            logout();
-        } finally {
-            setLoading(false);
-        }
-    };
+    // Convert Neon Auth user to our User interface
+    const user: User | null = stackUser ? {
+        id: stackUser.id,
+        email: stackUser.primaryEmail || '',
+        first_name: stackUser.displayName?.split(' ')[0] || '',
+        last_name: stackUser.displayName?.split(' ').slice(1).join(' ') || '',
+        is_active: true,
+        is_verified: stackUser.primaryEmailVerified || false,
+        auth_provider: 'neon',
+    } : null;
 
     const login = (token: string) => {
-        localStorage.setItem('token', token);
-        fetchUser(token);
+        // Neon Auth handles login automatically, but we keep this for backward compatibility
+        // Token is stored automatically by Neon Auth
+        console.log('Login handled by Neon Auth');
     };
 
-    const logout = () => {
-        localStorage.removeItem('token');
-        setUser(null);
+    const logout = async () => {
+        await stackApp.signOut();
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user, loading }}>
+        <AuthContext.Provider value={{ 
+            user, 
+            login, 
+            logout, 
+            isAuthenticated: !!user, 
+            loading 
+        }}>
             {children}
         </AuthContext.Provider>
     );

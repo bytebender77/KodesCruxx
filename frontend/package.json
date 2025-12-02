@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
+    "@stackframe/react": "^1.0.0",
     "@supabase/supabase-js": "^2.57.4",
     "@types/react-syntax-highlighter": "^15.5.13",
     "lucide-react": "^0.344.0",
@@ -19,6 +20,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-markdown": "^10.1.0",
+    "react-router-dom": "^6.26.0",
     "react-snowfall": "^2.3.0",
     "react-syntax-highlighter": "^16.1.0",
     "reactflow": "^11.11.4"
