@@ -57,7 +57,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
 
             try {
-                // Create/sync user with backend
+                // Get Stack Auth access token
+                const authJson = await stackApp.getAuthJson();
+                const stackAuthToken = authJson?.accessToken;
+                console.log('Stack Auth token retrieved:', stackAuthToken ? 'Yes' : 'No');
+
+                // Try to sync with backend to get backend JWT
                 const response = await fetch(`${API_BASE_URL}/auth/sync-stack-user`, {
                     method: 'POST',
                     headers: {
@@ -74,17 +79,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     const data = await response.json();
                     if (data.access_token) {
                         localStorage.setItem('token', data.access_token);
+                        console.log('Backend JWT stored successfully');
+                    }
+                } else {
+                    console.error('Backend sync failed:', response.status, await response.text());
+                    // Fallback: use Stack Auth token directly
+                    if (stackAuthToken) {
+                        localStorage.setItem('token', stackAuthToken);
+                        console.log('Using Stack Auth token as fallback');
                     }
                 }
             } catch (error) {
                 console.error('Failed to sync with backend:', error);
+                // Try to get and use Stack Auth token as fallback
+                try {
+                    const authJson = await stackApp.getAuthJson();
+                    const stackAuthToken = authJson?.accessToken;
+                    if (stackAuthToken) {
+                        localStorage.setItem('token', stackAuthToken);
+                        console.log('Stack Auth token stored as fallback');
+                    }
+                } catch (tokenError) {
+                    console.error('Failed to get Stack Auth token:', tokenError);
+                }
             } finally {
                 setIsLoading(false);
             }
         };
 
         syncWithBackend();
-    }, [stackUser]);
+    }, [stackUser, stackApp]);
 
     const login = (token: string) => {
         localStorage.setItem('token', token);
