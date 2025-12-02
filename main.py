@@ -65,13 +65,22 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-# Create tables for new auth system
-NewBase.metadata.create_all(bind=new_engine)
-
-# CRITICAL: Create tables for old models (including UserActivity for quota tracking)
-# This ensures the quota enforcement system works on first deployment
-from database import engine as old_engine
-old_models.Base.metadata.create_all(bind=old_engine)
+# Create tables asynchronously on startup to avoid blocking health checks
+@app.on_event("startup")
+async def startup_event():
+    """Create database tables on startup - non-blocking"""
+    try:
+        # Create tables for new auth system
+        NewBase.metadata.create_all(bind=new_engine)
+        logger.info("✅ New auth tables created/verified")
+        
+        # Create tables for old models (including UserActivity for quota tracking)
+        from database import engine as old_engine
+        old_models.Base.metadata.create_all(bind=old_engine)
+        logger.info("✅ Legacy tables created/verified")
+    except Exception as e:
+        logger.error(f"⚠️ Database table creation error (non-fatal): {e}")
+        # Don't fail startup - tables might already exist
 
 # Include new Auth Router
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
@@ -551,7 +560,13 @@ async def stream_refactor_code_endpoint(req: RequestModel, user: user_models.Use
 
 @app.get("/health")
 def health():
-    """Health check endpoint - also used to wake up backend from cold start"""
+    """Fast health check endpoint for Render - no blocking operations"""
+    # Fast response without LLM check to avoid timeout
+    return {"status": "ok", "message": "Backend is healthy"}
+
+@app.get("/health/detailed")
+def health_detailed():
+    """Detailed health check with LLM status - use for monitoring, not Render health checks"""
     health_status = check_llm_health()
     return {"status": "ok", "llm": health_status}
 
