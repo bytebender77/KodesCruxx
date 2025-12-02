@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStackApp } from '@stackframe/react';
-import { X, Lock, Mail, ArrowRight, Eye, EyeOff, Shield, Clock } from 'lucide-react';
+import { Code2, X, Mail, Lock, Github } from 'lucide-react';
 
 interface AuthModalProps {
     isOpen: boolean;
@@ -8,198 +8,302 @@ interface AuthModalProps {
 }
 
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
-    const [isLogin, setIsLogin] = useState(true);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
+    const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
+    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
     const stackApp = useStackApp();
 
-    if (!isOpen) return null;
+    // Form states
+    const [loginEmail, setLoginEmail] = useState('');
+    const [loginPassword, setLoginPassword] = useState('');
+    const [signupFirstName, setSignupFirstName] = useState('');
+    const [signupLastName, setSignupLastName] = useState('');
+    const [signupEmail, setSignupEmail] = useState('');
+    const [signupPassword, setSignupPassword] = useState('');
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsLoading(true);
         setError('');
-        setLoading(true);
 
         try {
-            if (isLogin) {
-                const result = await stackApp.signInWithCredential({
-                    email,
-                    password
-                });
-                if (result.status === 'error') {
-                    throw new Error(result.error.message || 'Login failed');
-                }
-                onClose();
-            } else {
-                const result = await stackApp.signUpWithCredential({
-                    email,
-                    password
-                });
-                if (result.status === 'error') {
-                    throw new Error(result.error.message || 'Signup failed');
-                }
-                onClose();
+            const result = await stackApp.signInWithCredential({
+                email: loginEmail,
+                password: loginPassword
+            });
+            if (result.status === 'error') {
+                throw new Error(result.error.message || 'Login failed');
             }
-        } catch (err: any) {
-            console.error('Auth error:', err);
-            setError(err.message || 'An error occurred. Please try again.');
+            onClose();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Login failed');
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     };
 
-    const isFormValid = email.trim().length > 2 && password.length >= 6;
+    const handleSignup = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setError('');
+
+        try {
+            const result = await stackApp.signUpWithCredential({
+                email: signupEmail,
+                password: signupPassword
+            });
+            if (result.status === 'error') {
+                throw new Error(result.error.message || 'Signup failed');
+            }
+            onClose();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Signup failed');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleGithubAuth = () => {
+        // GitHub OAuth with Stack Auth (you'll need to configure this in Stack Auth dashboard)
+        console.log('GitHub auth not yet configured');
+    };
+
+    const handleGoogleAuth = () => {
+        // Google OAuth with Stack Auth (you'll need to configure this in Stack Auth dashboard)
+        console.log('Google auth not yet configured');
+    };
+
+    if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-            <div className="relative z-10 w-full max-w-3xl">
-                <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/10 backdrop-blur-xl shadow-2xl shadow-black/40 ring-1 ring-white/10 transition-all duration-300 hover:border-white/20 hover:ring-white/20 shadow-[0_0_40px_rgba(249,115,22,0.35)]">
-                    {/* Top hairline */}
-                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+        <div className={`fixed inset-0 z-[100] flex items-center justify-center transition-opacity duration-300 ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
+            {/* Backdrop */}
+            <div onClick={onClose} className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
 
-                    {/* Close button */}
-                    <button
-                        onClick={onClose}
-                        className="absolute top-4 right-4 z-20 grid h-8 w-8 place-items-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
-                    >
-                        <X size={18} />
+            {/* Modal Content (Wide) */}
+            <div className={`relative w-full max-w-4xl bg-[#0e0e0e] rounded-2xl border border-white/10 shadow-2xl transform transition-all duration-300 overflow-hidden flex flex-col md:flex-row h-auto md:h-[600px] ${isOpen ? 'scale-100' : 'scale-95'}`}>
+
+                {/* Left Side: Visual Section */}
+                <div className="hidden md:flex w-1/2 relative overflow-hidden bg-[#050505] flex-col justify-between p-12 border-r border-white/5">
+                    <div className="absolute inset-0 z-0">
+                        <img src="/images/bc0e3057-c73b-46a1-a617-dceb564857f0_800w.jpg" alt="Auth Banner" className="w-full h-full object-cover opacity-80" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent" />
+                    </div>
+
+                    {/* Quote / Bottom Text */}
+                    <div className="relative z-10 mt-auto">
+                        <blockquote className="text-xl font-medium text-white mb-2 leading-relaxed">
+                            "The best way to predict the future is to invent it."
+                        </blockquote>
+                        <cite className="text-sm font-mono text-slate-500 not-italic tracking-wide block uppercase">
+                            — Built for Builders
+                        </cite>
+                    </div>
+                </div>
+
+                {/* Right Side: Form */}
+                <div className="w-full md:w-1/2 p-8 md:p-10 flex flex-col justify-center relative z-10 bg-[#0e0e0e]">
+
+                    {/* Close Button for Desktop */}
+                    <button onClick={onClose} className="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors z-20 hover:bg-white/10 p-2 rounded-full hidden md:block">
+                        <X className="w-6 h-6" />
                     </button>
 
-                    {/* Split: Image + Form */}
-                    <div className="relative flex flex-col sm:flex-row">
-                        {/* Image (Left) */}
-                        <div className="relative w-full sm:w-1/2 h-48 sm:h-auto">
-                            <img
-                                src="https://images.unsplash.com/photo-1639322537228-f710d846310a?q=80&w=1632&auto=format&fit=crop"
-                                alt="Coding background"
-                                className="absolute inset-0 h-full w-full object-cover"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-tr from-black/50 via-black/30 to-transparent"></div>
-                            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-lg border border-white/10 bg-black/30 px-3 py-2 backdrop-blur-md">
-                                <div className="flex items-center gap-2 text-xs text-white/75">
-                                    <Shield className="h-3.5 w-3.5" />
-                                    Secure Authentication
+                    {/* Header */}
+                    <div className="flex justify-between items-start mb-6">
+                        <div>
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="w-6 h-6 rounded bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
+                                    <Code2 className="text-white w-3 h-3" />
                                 </div>
-                                <span className="text-[11px] text-white/60">Neon Auth</span>
+                                <span className="font-semibold tracking-tight text-white">KodesCruxx</span>
                             </div>
+                            <h2 className="text-2xl font-semibold text-white tracking-tight">
+                                {authMode === 'login' ? 'Welcome back' : 'Create account'}
+                            </h2>
                         </div>
+                        <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors p-1 hover:bg-white/5 rounded-md absolute top-6 right-6 md:hidden">
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
 
-                        {/* Form (Right) */}
-                        <div className="p-6 sm:p-8 w-full sm:w-1/2">
-                            <div className="mb-6">
-                                <h1 className="text-[26px] font-semibold tracking-tight text-white">
-                                    {isLogin ? 'Welcome back' : 'Create account'}
-                                </h1>
-                                <p className="mt-1.5 text-sm text-white/60">
-                                    {isLogin ? 'Sign in to continue coding' : 'Join the KodesCruxx community'}
-                                </p>
-                            </div>
+                    {/* Social Auth */}
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                        <button
+                            onClick={handleGithubAuth}
+                            className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg py-2.5 transition-colors group"
+                        >
+                            <Github className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+                            <span className="text-sm font-medium text-slate-300 group-hover:text-white">GitHub</span>
+                        </button>
+                        <button
+                            onClick={handleGoogleAuth}
+                            className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg py-2.5 transition-colors group"
+                        >
+                            <svg className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"></path>
+                            </svg>
+                            <span className="text-sm font-medium text-slate-300 group-hover:text-white">Google</span>
+                        </button>
+                    </div>
 
-                            {error && (
-                                <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-200">
-                                    {error}
-                                </div>
-                            )}
-
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                {/* Email */}
-                                <div className="space-y-2">
-                                    <label htmlFor="email" className="block text-sm text-white/80">
-                                        Email
-                                    </label>
-                                    <div className="group/input relative flex items-center rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 transition-all hover:border-white/20 focus-within:border-white/25 focus-within:bg-white/[0.07]">
-                                        <Mail className="mr-2 h-4.5 w-4.5 text-white/60" />
-                                        <input
-                                            id="email"
-                                            type="email"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            placeholder="you@domain.com"
-                                            className="w-full bg-transparent text-sm text-white placeholder:text-white/40 focus:outline-none"
-                                            required
-                                        />
-                                        <div className="pointer-events-none absolute inset-0 rounded-xl ring-0 ring-orange-400/0 transition-all group-focus-within/input:ring-2 group-focus-within/input:ring-orange-400/25"></div>
-                                    </div>
-                                </div>
-
-                                {/* Password */}
-                                <div className="space-y-2">
-                                    <label htmlFor="password" className="block text-sm text-white/80">
-                                        Password
-                                    </label>
-                                    <div className="group/input relative flex items-center rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 transition-all hover:border-white/20 focus-within:border-white/25 focus-within:bg-white/[0.07]">
-                                        <Lock className="mr-2 h-4.5 w-4.5 text-white/60" />
-                                        <input
-                                            id="password"
-                                            type={showPassword ? 'text' : 'password'}
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            placeholder="••••••••"
-                                            className="w-full bg-transparent text-sm text-white placeholder:text-white/40 focus:outline-none"
-                                            required
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="ml-2 grid h-8 w-8 place-items-center rounded-lg text-white/70 hover:text-white/90 hover:bg-white/10 transition-colors"
-                                        >
-                                            {showPassword ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
-                                        </button>
-                                        <div className="pointer-events-none absolute inset-0 rounded-xl ring-0 ring-orange-400/0 transition-all group-focus-within/input:ring-2 group-focus-within/input:ring-orange-400/25"></div>
-                                    </div>
-                                </div>
-
-                                {/* Divider */}
-                                <div className="relative">
-                                    <div className="my-2 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-                                </div>
-
-                                {/* Submit */}
-                                <div className="grid gap-3">
-                                    <button
-                                        type="submit"
-                                        disabled={!isFormValid || loading}
-                                        className="group relative inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-orange-900/30 outline-none ring-1 ring-orange-400/30 transition-all hover:shadow-orange-900/40 focus-visible:ring-2 focus-visible:ring-orange-300 disabled:cursor-not-allowed disabled:opacity-60 hover:brightness-110"
-                                        style={{
-                                            background: 'radial-gradient(120% 120% at 0% 0%, rgba(251,146,60,1) 0%, rgba(249,115,22,1) 36%, rgba(251,146,60,0.25) 60%), radial-gradient(120% 120% at 100% 0%, rgba(245,158,11,1) 0%, rgba(251,146,60,0.9) 45%, rgba(245,158,11,0.25) 70%), radial-gradient(140% 140% at 100% 100%, rgba(249,115,22,1) 10%, rgba(234,88,12,1) 45%, rgba(154,52,18,1) 85%)'
-                                        }}
-                                    >
-                                        <span className="absolute inset-0 -z-10 rounded-xl bg-orange-400/20 opacity-0 blur-xl transition-opacity group-hover:opacity-100"></span>
-                                        {loading ? (
-                                            <div className="h-4.5 w-4.5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                                        ) : (
-                                            <ArrowRight className="mr-2 h-4.5 w-4.5" />
-                                        )}
-                                        {isLogin ? 'Sign in' : 'Sign up'}
-                                    </button>
-                                    <p className="text-center text-xs text-white/55">
-                                        {isLogin ? 'New here?' : 'Already have an account?'}{' '}
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsLogin(!isLogin)}
-                                            className="text-orange-300/90 hover:text-orange-300 underline underline-offset-4"
-                                        >
-                                            {isLogin ? 'Create an account' : 'Sign in'}
-                                        </button>
-                                    </p>
-                                </div>
-                            </form>
+                    <div className="relative mb-6">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-white/10"></div>
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-[#0e0e0e] px-2 text-slate-500 font-medium tracking-wider">Or continue with</span>
                         </div>
                     </div>
 
-                    {/* Bottom footer */}
-                    <div className="flex items-center justify-between rounded-b-2xl border-t border-white/10 bg-white/[0.04] px-6 py-3 text-[11px] text-white/55">
-                        <div className="flex items-center gap-2">
-                            <Shield className="h-3.5 w-3.5" />
-                            <span>End-to-end encrypted</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Clock className="h-3.5 w-3.5" />
-                            <span>Fast & secure</span>
-                        </div>
+                    {/* Login Form */}
+                    {authMode === 'login' && (
+                        <form className="space-y-4" onSubmit={handleLogin}>
+                            {error && <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-2 rounded-lg">{error}</div>}
+                            <div>
+                                <label className="text-xs font-medium text-slate-400 mb-1.5 block">Email address</label>
+                                <div className="relative">
+                                    <input
+                                        type="email"
+                                        value={loginEmail}
+                                        onChange={(e) => setLoginEmail(e.target.value)}
+                                        required
+                                        className="w-full bg-[#050505] border border-white/10 focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 transition-all rounded-lg px-3 py-2.5 pl-10 text-sm text-white placeholder-slate-600 outline-none"
+                                        placeholder="name@company.com"
+                                    />
+                                    <div className="absolute left-3 top-2.5 text-slate-600 pointer-events-none">
+                                        <Mail className="w-4 h-4" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <label className="text-xs font-medium text-slate-400">Password</label>
+                                    <a href="#" className="text-xs text-orange-500 hover:text-orange-400 hover:underline">Forgot password?</a>
+                                </div>
+                                <div className="relative">
+                                    <input
+                                        type="password"
+                                        value={loginPassword}
+                                        onChange={(e) => setLoginPassword(e.target.value)}
+                                        required
+                                        className="w-full bg-[#050505] border border-white/10 focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 transition-all rounded-lg px-3 py-2.5 pl-10 text-sm text-white placeholder-slate-600 outline-none"
+                                        placeholder="••••••••"
+                                    />
+                                    <div className="absolute left-3 top-2.5 text-slate-600 pointer-events-none">
+                                        <Lock className="w-4 h-4" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 mt-2">
+                                <input
+                                    type="checkbox"
+                                    id="remember"
+                                    className="w-4 h-4 rounded border border-white/20 bg-white/5"
+                                />
+                                <label htmlFor="remember" className="text-xs text-slate-400 select-none">Keep me signed in</label>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="w-full bg-white text-black font-semibold rounded-lg py-2.5 mt-2 hover:bg-slate-200 transition-all active:scale-95 text-sm shadow-[0_0_15px_rgba(255,255,255,0.1)] disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isLoading ? 'Signing In...' : 'Sign In'}
+                            </button>
+
+                            <p className="text-center text-xs text-slate-500 mt-4">
+                                Don't have an account? <button type="button" onClick={() => setAuthMode('signup')} className="text-orange-500 hover:underline font-medium">Sign up</button>
+                            </p>
+                        </form>
+                    )}
+
+                    {/* Sign Up Form */}
+                    {authMode === 'signup' && (
+                        <form className="space-y-4" onSubmit={handleSignup}>
+                            {error && <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-2 rounded-lg">{error}</div>}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="text-xs font-medium text-slate-400 mb-1.5 block">First name</label>
+                                    <input
+                                        type="text"
+                                        value={signupFirstName}
+                                        onChange={(e) => setSignupFirstName(e.target.value)}
+                                        required
+                                        className="w-full bg-[#050505] border border-white/10 focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 transition-all rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-600 outline-none"
+                                        placeholder="John"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-medium text-slate-400 mb-1.5 block">Last name</label>
+                                    <input
+                                        type="text"
+                                        value={signupLastName}
+                                        onChange={(e) => setSignupLastName(e.target.value)}
+                                        required
+                                        className="w-full bg-[#050505] border border-white/10 focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 transition-all rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-600 outline-none"
+                                        placeholder="Doe"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="text-xs font-medium text-slate-400 mb-1.5 block">Email address</label>
+                                <div className="relative">
+                                    <input
+                                        type="email"
+                                        value={signupEmail}
+                                        onChange={(e) => setSignupEmail(e.target.value)}
+                                        required
+                                        className="w-full bg-[#050505] border border-white/10 focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 transition-all rounded-lg px-3 py-2.5 pl-10 text-sm text-white placeholder-slate-600 outline-none"
+                                        placeholder="name@company.com"
+                                    />
+                                    <div className="absolute left-3 top-2.5 text-slate-600 pointer-events-none">
+                                        <Mail className="w-4 h-4" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="text-xs font-medium text-slate-400 mb-1.5 block">Password</label>
+                                <div className="relative">
+                                    <input
+                                        type="password"
+                                        value={signupPassword}
+                                        onChange={(e) => setSignupPassword(e.target.value)}
+                                        required
+                                        minLength={8}
+                                        className="w-full bg-[#050505] border border-white/10 focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 transition-all rounded-lg px-3 py-2.5 pl-10 text-sm text-white placeholder-slate-600 outline-none"
+                                        placeholder="Create a password"
+                                    />
+                                    <div className="absolute left-3 top-2.5 text-slate-600 pointer-events-none">
+                                        <Lock className="w-4 h-4" />
+                                    </div>
+                                </div>
+                                <p className="text-[10px] text-slate-600 mt-1">Must be at least 8 characters.</p>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="w-full bg-gradient-to-r from-orange-500 to-red-600 text-white font-semibold rounded-lg py-2.5 mt-2 hover:opacity-90 transition-all active:scale-95 text-sm shadow-[0_0_15px_rgba(249,115,22,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isLoading ? 'Creating Account...' : 'Create Account'}
+                            </button>
+
+                            <p className="text-center text-xs text-slate-500 mt-4">
+                                Already have an account? <button type="button" onClick={() => setAuthMode('login')} className="text-orange-500 hover:underline font-medium">Log in</button>
+                            </p>
+                        </form>
+                    )}
+
+                    {/* Small Footer inside Form */}
+                    <div className="mt-auto pt-6 border-t border-white/5 text-center md:text-left">
+                        <p className="text-[10px] text-slate-600">
+                            By continuing, you agree to our <a href="#" className="hover:text-slate-400 transition-colors">Terms</a> and <a href="#" className="hover:text-slate-400 transition-colors">Privacy Policy</a>.
+                        </p>
                     </div>
                 </div>
             </div>
