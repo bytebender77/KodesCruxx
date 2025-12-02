@@ -21,18 +21,13 @@ services:
         value: "False"
       - key: LOG_LEVEL
         value: INFO
+      # Use PostgreSQL on Render for persistent storage.
+      # Replace this value with your actual Render PostgreSQL connection string,
+      # e.g. postgresql://user:password@host:port/dbname
       - key: DATABASE_URL
-        fromDatabase:
-          name: kodescruxx-db
-          property: connectionString
+        value: postgresql://user:password@host:5432/dbname
       - key: ALLOWED_ORIGINS
         value: https://kodes-cruxx.vercel.app
+        sync: false
     healthCheckPath: /health
     autoDeploy: true
-
-databases:
-  - name: kodescruxx-db
-    databaseName: kodescruxx
-    user: kodescruxx_user
-    plan: free
-    region: oregon

@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
+import { API_BASE_URL } from '../services/api';
 
 interface User {
     id: string;
     email: string;
+    username?: string;
     first_name?: string;
     last_name?: string;
     is_active?: boolean;
@@ -36,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const fetchUser = async (token: string) => {
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/auth/me`, {
+            const response = await fetch(`${API_BASE_URL}/auth/me`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

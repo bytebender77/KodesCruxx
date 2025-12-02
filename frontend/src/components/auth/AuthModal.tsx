@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { X, User, Lock, Mail, ArrowRight } from 'lucide-react';
+import { API_BASE_URL } from '../../services/api';
 
 interface AuthModalProps {
     isOpen: boolean;
@@ -23,52 +24,51 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         setError('');
         setLoading(true);
 
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-
         try {
             if (isLogin) {
+                // Login flow - use /token endpoint
                 const formData = new FormData();
-                formData.append('username', username);
+                formData.append('username', username); // Can be email or username
                 formData.append('password', password);
 
-                const response = await fetch(`${apiUrl}/token`, {
+                const response = await fetch(`${API_BASE_URL}/token`, {
                     method: 'POST',
                     body: formData,
                 });
 
                 if (!response.ok) {
-                    throw new Error('Invalid credentials');
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.detail || 'Invalid credentials');
                 }
 
                 const data = await response.json();
                 login(data.access_token);
                 onClose();
             } else {
-                const response = await fetch(`${apiUrl}/register`, {
+                // Signup flow - use /register endpoint
+                const response = await fetch(`${API_BASE_URL}/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password, email }),
+                    body: JSON.stringify({
+                        username,
+                        email: email || username, // Use username as email if email not provided
+                        password
+                    }),
                 });
 
                 if (!response.ok) {
-                    const data = await response.json();
+                    const data = await response.json().catch(() => ({}));
                     throw new Error(data.detail || 'Registration failed');
                 }
 
+                const data = await response.json();
                 // Auto login after register
-                const formData = new FormData();
-                formData.append('username', username);
-                formData.append('password', password);
-                const loginRes = await fetch(`${apiUrl}/token`, {
-                    method: 'POST',
-                    body: formData,
-                });
-                const loginData = await loginRes.json();
-                login(loginData.access_token);
+                login(data.access_token);
                 onClose();
             }
         } catch (err: any) {
-            setError(err.message);
+            console.error('Auth error:', err);
+            setError(err.message || 'An error occurred. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -112,7 +112,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
                     {!isLogin && (
                         <div className="space-y-1">
-                            <label className="text-sm font-medium text-gray-300 ml-1">Email</label>
+                            <label className="text-sm font-medium text-gray-300 ml-1">Email (optional)</label>
                             <div className="relative">
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                                 <input
@@ -120,7 +120,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     className="w-full bg-black/20 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                                    placeholder="Enter email"
+                                    placeholder="Enter email (optional)"
                                 />
                             </div>
                         </div>

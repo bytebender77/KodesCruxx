@@ -143,19 +143,14 @@ export default function AboutPage({ onBack }: AboutPageProps) {
                             {[
                                 {
                                     name: "Palak Soni",
-                                    role: "Founder Product & Strategy",
+                                    role: "Founder Product & Strategy, Backend & AI",
                                     linkedin: "https://www.linkedin.com/in/palak-soni-292280288/",
                                     image: "/images/team/palak.jpeg"
                                 },
-                                {
-                                    name: "Kunal Kumar Gupta",
-                                    role: "AI & Backend Engineering",
-                                    linkedin: "https://www.linkedin.com/in/kunal-kumar-gupta-41bab327a/",
-                                    image: "/images/team/kunal.jpeg?v=2"
-                                },
+
                                 {
                                     name: "Sujal Kumar",
-                                    role: "Design & Marketing",
+                                    role: "Design & Marketing, Full Stack Web Development",
                                     linkedin: "https://www.linkedin.com/in/sujal-kumar-585135289/",
                                     image: "/images/team/sujal.jpeg"
                                 }
