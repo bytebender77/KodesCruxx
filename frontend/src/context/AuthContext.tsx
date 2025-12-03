@@ -67,12 +67,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${stackAuthToken}`
                     },
-                    body: JSON.stringify({
-                        email: stackUser.primaryEmail,
-                        stack_user_id: stackUser.id,
-                        display_name: stackUser.displayName || '',
-                    }),
                 });
 
                 if (response.ok) {

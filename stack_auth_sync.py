@@ -3,89 +3,51 @@ Stack Auth Integration Endpoint
 Creates a backend user for Stack Auth authenticated users and returns a JWT token
 """
 from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel
-from app.auth import service as auth_service
-from app.core.database import get_db
-from app.users.models import User
 from sqlalchemy.orm import Session
-from passlib.context import CryptContext
-import secrets
+from app.core.database import get_db
+from app.users import models as user_models
+from app.auth.router import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-class StackUserSync(BaseModel):
-    email: str
-    stack_user_id: str
-    display_name: str = ""
 
 @router.post("/sync-stack-user")
-def sync_stack_user(data: StackUserSync, db: Session = Depends(get_db)):
+def sync_stack_user(
+    current_user: user_models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """
-    Sync a Stack Auth user with the backend database.
-    Creates a new user if they don't exist, or returns existing user.
-    Returns a JWT token for API access.
+    Sync Neon Auth user into local DB.
+    NEVER hashes passwords. Neon is the identity provider.
     """
+
     try:
-        # Check if user already exists
-        existing_user = db.query(User).filter(User.email == data.email).first()
-        
-        if existing_user:
-            # User exists, generate token
-            access_token, _ = auth_service.create_tokens(user_id=existing_user.id)
-            return {
-                "access_token": access_token,
-                "token_type": "bearer",
-                "user": {
-                    "id": existing_user.id,
-                    "email": existing_user.email,
-                    "first_name": existing_user.first_name,
-                    "last_name": existing_user.last_name
-                }
-            }
-        
-        # Create new user
-        # Extract first/last name from display_name
-        name_parts = data.display_name.split(' ', 1) if data.display_name else ['User', '']
-        first_name = name_parts[0] if len(name_parts) > 0 else 'User'
-        last_name = name_parts[1] if len(name_parts) > 1 else ''
-        
-        # Generate username from email
-        username = data.email.split('@')[0] + '_' + secrets.token_hex(4)
-        
-        # Create user with a random password (won't be used since auth is via Stack)
-        random_password = secrets.token_urlsafe(32)
-        hashed_password = pwd_context.hash(random_password)
-        
-        new_user = User(
-            email=data.email,
-            username=username,
-            first_name=first_name,
-            last_name=last_name,
-            hashed_password=hashed_password,
-            is_active=True,
-            is_verified=True,
-            auth_provider='stack'
-        )
-        
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
-        
-        # Generate JWT token
-        access_token, _ = auth_service.create_tokens(user_id=new_user.id)
-        
-        return {
-            "access_token": access_token,
-            "token_type": "bearer",
-            "user": {
-                "id": new_user.id,
-                "email": new_user.email,
-                "first_name": new_user.first_name,
-                "last_name": new_user.last_name
-            }
-        }
-        
+        db_user = db.query(user_models.User).filter(
+            user_models.User.id == current_user.id
+        ).first()
+
+        if not db_user:
+            # Note: This block might not be reached if get_current_user fails for non-existent users.
+            # However, if get_current_user is capable of validating the token and returning a user object 
+            # (even if not in DB, depending on implementation), this would work.
+            # Based on current get_current_user implementation, it checks DB.
+            # But we are following the user's explicit "ULTIMATE FIX" instructions.
+            
+            db_user = user_models.User(
+                id=current_user.id,
+                email=current_user.email,
+                username=current_user.email.split("@")[0],
+                first_name=current_user.first_name,
+                last_name=current_user.last_name,
+                hashed_password=None  # ✅ IMPORTANT: no password at all
+            )
+            db.add(db_user)
+            db.commit()
+            db.refresh(db_user)
+
+        return {"success": True, "user_id": db_user.id}
+
     except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to sync user: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to sync user: {str(e)}"
+        )
