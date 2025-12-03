@@ -399,7 +399,7 @@ async def stream_debug_endpoint(req: RequestModel, user: user_models.User = Depe
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 @app.post("/stream/generate")
-async def stream_generate_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
+async def stream_generate_endpoint(req: RequestModel):
     """Stream code generation"""
     async def generate():
         # Send immediate response to show request was received
@@ -410,7 +410,7 @@ async def stream_generate_endpoint(req: RequestModel, user: user_models.User = D
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 @app.post("/stream/convert_logic")
-async def stream_convert_logic_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
+async def stream_convert_logic_endpoint(req: RequestModel):
     """Stream logic to code conversion"""
     async def generate():
         # Send immediate response to show request was received
@@ -421,7 +421,7 @@ async def stream_convert_logic_endpoint(req: RequestModel, user: user_models.Use
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 @app.post("/stream/analyze_complexity")
-async def stream_analyze_complexity_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
+async def stream_analyze_complexity_endpoint(req: RequestModel):
     """Stream complexity analysis"""
     async def generate():
         # Send immediate response to show request was received
@@ -432,7 +432,7 @@ async def stream_analyze_complexity_endpoint(req: RequestModel, user: user_model
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 @app.post("/stream/trace_code")
-async def stream_trace_code_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
+async def stream_trace_code_endpoint(req: RequestModel):
     """Stream code tracing"""
     async def generate():
         # Send immediate response to show request was received
@@ -443,7 +443,7 @@ async def stream_trace_code_endpoint(req: RequestModel, user: user_models.User =
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 @app.post("/stream/get_snippets")
-async def stream_get_snippets_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
+async def stream_get_snippets_endpoint(req: RequestModel):
     """Stream code snippets"""
     async def generate():
         # Send immediate response to show request was received
@@ -454,7 +454,7 @@ async def stream_get_snippets_endpoint(req: RequestModel, user: user_models.User
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 @app.post("/stream/get_projects")
-async def stream_get_projects_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
+async def stream_get_projects_endpoint(req: RequestModel):
     """Stream project ideas"""
     async def generate():
         # Send immediate response to show request was received
@@ -465,7 +465,7 @@ async def stream_get_projects_endpoint(req: RequestModel, user: user_models.User
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 @app.post("/stream/get_roadmaps")
-async def stream_get_roadmaps_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
+async def stream_get_roadmaps_endpoint(req: RequestModel):
     """Stream learning roadmaps"""
     async def generate():
         # Send immediate response to show request was received
@@ -477,7 +477,7 @@ async def stream_get_roadmaps_endpoint(req: RequestModel, user: user_models.User
 
 
 @app.post("/stream/review_code")
-async def stream_review_code_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
+async def stream_review_code_endpoint(req: RequestModel):
     """Stream code review analysis"""
     async def generate():
         yield f"data: {json.dumps({'chunk': ''})}\n\n"
@@ -487,7 +487,7 @@ async def stream_review_code_endpoint(req: RequestModel, user: user_models.User 
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 @app.post("/stream/generate_tests")
-async def stream_generate_tests_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
+async def stream_generate_tests_endpoint(req: RequestModel):
     """Stream test generation"""
     async def generate():
         yield f"data: {json.dumps({'chunk': ''})}\n\n"
@@ -498,7 +498,7 @@ async def stream_generate_tests_endpoint(req: RequestModel, user: user_models.Us
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 @app.post("/stream/refactor_code")
-async def stream_refactor_code_endpoint(req: RequestModel, user: user_models.User = Depends(check_rate_limit)):
+async def stream_refactor_code_endpoint(req: RequestModel):
     """Stream code refactoring"""
     async def generate():
         yield f"data: {json.dumps({'chunk': ''})}\n\n"
