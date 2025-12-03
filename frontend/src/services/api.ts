@@ -502,6 +502,9 @@ class ApiService {
   }
 
   async logActivity(feature: string, language?: string, success: boolean = true, duration_ms?: number) {
+    // Mocked response - Activity logging disabled
+    return { success: true };
+    /*
     const token = await getAuthToken();
     const response = await fetch(`${API_BASE_URL}/activity/log`, {
       method: 'POST',
@@ -513,6 +516,7 @@ class ApiService {
     });
     if (!response.ok) throw new Error('Failed to log activity');
     return response.json();
+    */
   }
 
   // Workflow endpoints
@@ -565,6 +569,17 @@ class ApiService {
 
   // Quota management
   async getQuotaStatus(): Promise<QuotaStatus> {
+    // Mocked response - Quota disabled
+    return {
+      success: true,
+      quota_used: 0,
+      quota_limit: 999999,
+      quota_remaining: 999999,
+      reset_at: new Date(Date.now() + 86400000).toISOString(),
+      is_exhausted: false
+    };
+
+    /*
     const token = await getAuthToken();
 
     if (!token) {
@@ -582,6 +597,7 @@ class ApiService {
     }
 
     return response.json();
+    */
   }
 }
 
